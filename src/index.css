@@ -1,0 +1,313 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* No dark mode. This variant is kept deliberately as a no-op guard: the `.dark`
+   class is never applied, so any `dark:` utility shipped inside a shadcn
+   component compiles to a rule that can never match. Delete it and `dark:`
+   falls back to Tailwind's built-in prefers-color-scheme behaviour, which would
+   let a user's OS setting mutate the design. */
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Brand palette — raw, immutable values. Generates utilities: bg-parchment,
+   text-ink, border-god, etc.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-bg-deep: #0b0e1a;
+  --color-parchment: #f2e8d0;
+  --color-ink: #2a2118;
+  --color-ink-soft: #3a2f22;
+  --color-star-white: #efe9da;
+  --color-gold-white: #fff8e8;
+
+  --color-god: #c9a24b;
+  --color-god-ink: #8a6413;
+  --color-hero: #5fd0e0;
+  --color-hero-ink: #186878;
+  --color-titan: #a06be0;
+  --color-titan-ink: #5b3486;
+  --color-monster: #e2725b;
+  --color-monster-ink: #8f3225;
+}
+
+/* ---------------------------------------------------------------------------
+   Gradients. Plain :root vars — gradients generate no utilities, so there is
+   nothing to gain from @theme. Use with `bg-(image:--gradient-title)`.
+   --------------------------------------------------------------------------- */
+:root {
+  --gradient-title: linear-gradient(90deg, #f3dfa0, #e07a4f 45%, #a06be0 75%, #5fd0e0);
+  --gradient-divider: linear-gradient(90deg, #c9a24b, #e2725b, #a06be0, #5fd0e0);
+
+  /* Ellipse sizes are not specified in the design doc — tuned by eye, adjust freely. */
+  --gradient-hero-wash:
+    radial-gradient(ellipse 60% 55% at 15% 25%, rgba(224, 194, 95, 0.18), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 85% 70%, rgba(160, 107, 224, 0.16), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 60% 15%, rgba(95, 208, 224, 0.14), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 35% 85%, rgba(226, 114, 91, 0.12), transparent 70%);
+
+  /* 1.5px star dots at fixed coordinates. Each layer is one dot; add or move at will. */
+  --gradient-star-field:
+    radial-gradient(1.5px 1.5px at 12% 18%, #e0c25f, transparent),
+    radial-gradient(1.5px 1.5px at 27% 62%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 38% 9%, #5fd0e0, transparent),
+    radial-gradient(1.5px 1.5px at 46% 44%, #a06be0, transparent),
+    radial-gradient(1.5px 1.5px at 54% 77%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 63% 28%, #e0c25f, transparent),
+    radial-gradient(1.5px 1.5px at 71% 88%, #5fd0e0, transparent),
+    radial-gradient(1.5px 1.5px at 79% 14%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 88% 52%, #a06be0, transparent),
+    radial-gradient(1.5px 1.5px at 94% 33%, #e0c25f, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Semantic tokens — night sky is the default surface.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  --background: var(--color-bg-deep);
+  --foreground: var(--color-star-white);
+
+  --card: var(--color-parchment);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-parchment);
+  --popover-foreground: var(--color-ink);
+
+  /* Flat gold takes dark text — #fff8e8 on #c9a24b is ~1.9:1. Use --color-gold-white
+     only on the CTA, where the gradient falls to ink. */
+  --primary: var(--color-god);
+  --primary-foreground: var(--color-bg-deep);
+
+  --secondary: color-mix(in oklab, var(--color-star-white) 8%, var(--color-bg-deep));
+  --secondary-foreground: var(--color-star-white);
+
+  --muted: color-mix(in oklab, var(--color-star-white) 6%, var(--color-bg-deep));
+  --muted-foreground: color-mix(in oklab, var(--color-star-white) 62%, var(--color-bg-deep));
+
+  --accent: color-mix(in oklab, var(--color-star-white) 12%, var(--color-bg-deep));
+  --accent-foreground: var(--color-star-white);
+
+  --destructive: var(--color-monster);
+
+  --border: color-mix(in oklab, var(--color-star-white) 14%, transparent);
+  --input: color-mix(in oklab, var(--color-star-white) 20%, transparent);
+  --ring: var(--color-god);
+
+  --chart-1: var(--color-god);
+  --chart-2: var(--color-hero);
+  --chart-3: var(--color-titan);
+  --chart-4: var(--color-monster);
+  --chart-5: var(--color-star-white);
+
+  /* 10px — the stat/fact card radius from the design doc. */
+  --radius: 0.625rem;
+
+  --sidebar: var(--color-bg-deep);
+  --sidebar-foreground: var(--color-star-white);
+  --sidebar-primary: var(--color-god);
+  --sidebar-primary-foreground: var(--color-bg-deep);
+  --sidebar-accent: color-mix(in oklab, var(--color-star-white) 12%, var(--color-bg-deep));
+  --sidebar-accent-foreground: var(--color-star-white);
+  --sidebar-border: color-mix(in oklab, var(--color-star-white) 14%, transparent);
+  --sidebar-ring: var(--color-god);
+}
+
+/* ---------------------------------------------------------------------------
+   Parchment surface — inverts polarity for everything inside it. Because the
+   semantic tokens below are mapped with `@theme inline`, utilities like
+   `text-muted-foreground` resolve at the element, so any shadcn component
+   dropped in here reads ink values with no per-component work.
+   --------------------------------------------------------------------------- */
+.surface-parchment {
+  --background: var(--color-parchment);
+  --foreground: var(--color-ink);
+
+  --card: color-mix(in oklab, #000 3.5%, var(--color-parchment));
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-parchment);
+  --popover-foreground: var(--color-ink);
+
+  --secondary: color-mix(in oklab, var(--color-ink) 8%, var(--color-parchment));
+  --secondary-foreground: var(--color-ink);
+
+  --muted: color-mix(in oklab, #000 3.5%, var(--color-parchment));
+  --muted-foreground: var(--color-ink-soft);
+
+  --accent: color-mix(in oklab, var(--color-ink) 8%, var(--color-parchment));
+  --accent-foreground: var(--color-ink);
+
+  --border: color-mix(in oklab, var(--color-ink) 15%, transparent);
+  --input: color-mix(in oklab, var(--color-ink) 25%, transparent);
+
+  /* Drop these two lines if you'd rather compose with `bg-background text-foreground`. */
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* ---------------------------------------------------------------------------
+   Category accents. One contextual hue, rebound per category — put
+   `data-category={character.category}` on the card/page root and every
+   descendant picks it up. Defaults to god so tokens never resolve empty.
+   --------------------------------------------------------------------------- */
+:root,
+[data-category] {
+  --cat: var(--color-god);
+  --cat-ink: var(--color-god-ink);
+  --cat-bg-alpha: 20%;
+  --cat-border-alpha: 60%;
+
+  --cat-bg: color-mix(in oklab, var(--cat) var(--cat-bg-alpha), transparent);
+  --cat-border: color-mix(in oklab, var(--cat) var(--cat-border-alpha), transparent);
+  --cat-fill-strong: color-mix(in oklab, var(--cat) 33%, transparent); /* {accent}55 */
+  --cat-fill-soft: color-mix(in oklab, var(--cat) 9%, transparent); /* {accent}18 */
+  --cat-glow: color-mix(in oklab, var(--cat) 35%, transparent);
+
+  --gradient-portrait: linear-gradient(160deg, var(--cat-fill-strong), var(--cat-fill-soft));
+  --gradient-cta: linear-gradient(135deg, var(--cat), var(--color-ink) 140%);
+}
+
+[data-category="god"] {
+  --cat: var(--color-god);
+  --cat-ink: var(--color-god-ink);
+}
+
+[data-category="hero"] {
+  --cat: var(--color-hero);
+  --cat-ink: var(--color-hero-ink);
+  --cat-bg-alpha: 18%;
+  --cat-border-alpha: 55%;
+}
+
+[data-category="titan"] {
+  --cat: var(--color-titan);
+  --cat-ink: var(--color-titan-ink);
+  --cat-bg-alpha: 18%;
+  --cat-border-alpha: 55%;
+}
+
+[data-category="monster"] {
+  --cat: var(--color-monster);
+  --cat-ink: var(--color-monster-ink);
+}
+
+/* ---------------------------------------------------------------------------
+   Token → utility mapping. `inline` means utilities emit `var(--card)` rather
+   than a snapshot of its value, which is what makes the scopes above work.
+   --------------------------------------------------------------------------- */
+@theme inline {
+  --font-sans: "Nunito", sans-serif;
+  --font-display: "Cinzel Decorative", serif;
+  --font-heading: var(--font-display);
+  --font-accent: "Kalam", cursive;
+
+  --color-cat: var(--cat);
+  --color-cat-ink: var(--cat-ink);
+  --color-cat-bg: var(--cat-bg);
+  --color-cat-border: var(--cat-border);
+  --color-cat-glow: var(--cat-glow);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground text-base leading-[1.65] antialiased;
+    margin: 0;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+  p {
+    margin: 0;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-bold text-foreground;
+  }
+  h1 {
+    @apply text-[56px] tracking-[-0.03em] max-lg:text-4xl font-bold;
+  }
+  h2 {
+    @apply text-2xl tracking-tight max-lg:text-xl;
+  }
+  h3 {
+    @apply text-xl max-lg:text-lg;
+  }
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+@layer components {
+  .text-eyebrow {
+    @apply font-accent text-sm uppercase tracking-[0.14em];
+  }
+
+  .text-tagline,
+  .text-pronunciation,
+  .text-fact-label {
+    @apply font-accent;
+  }
+
+  .text-pronunciation {
+    @apply font-bold;
+  }
+
+  /* Hero <h1>. Gradient text needs the clip trio, so it can't be a plain token. */
+  .text-gradient-title {
+    background-image: var(--gradient-title);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
