@@ -31,6 +31,8 @@
   --color-titan-ink: #5b3486;
   --color-monster: #e2725b;
   --color-monster-ink: #8f3225;
+
+  --animate-glow-pulse: glow-pulse 2.5s ease-in-out infinite;
 }
 
 /* ---------------------------------------------------------------------------
@@ -38,15 +40,52 @@
    nothing to gain from @theme. Use with `bg-(image:--gradient-title)`.
    --------------------------------------------------------------------------- */
 :root {
-  --gradient-title: linear-gradient(90deg, #f3dfa0, #e07a4f 45%, #a06be0 75%, #5fd0e0);
-  --gradient-divider: linear-gradient(90deg, #c9a24b, #e2725b, #a06be0, #5fd0e0);
+  --gradient-title: linear-gradient(
+    90deg,
+    #f3dfa0,
+    #e07a4f 45%,
+    #a06be0 75%,
+    #5fd0e0
+  );
+  --gradient-divider: linear-gradient(
+    90deg,
+    #c9a24b,
+    #e2725b,
+    #a06be0,
+    #5fd0e0
+  );
 
   /* Ellipse sizes are not specified in the design doc — tuned by eye, adjust freely. */
   --gradient-hero-wash:
-    radial-gradient(ellipse 60% 55% at 15% 25%, rgba(224, 194, 95, 0.18), transparent 70%),
-    radial-gradient(ellipse 55% 50% at 85% 70%, rgba(160, 107, 224, 0.16), transparent 70%),
-    radial-gradient(ellipse 50% 45% at 60% 15%, rgba(95, 208, 224, 0.14), transparent 70%),
-    radial-gradient(ellipse 55% 50% at 35% 85%, rgba(226, 114, 91, 0.12), transparent 70%);
+    radial-gradient(
+      ellipse 60% 55% at 15% 25%,
+      rgba(224, 194, 95, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 50% at 85% 70%,
+      rgba(160, 107, 224, 0.16),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 45% at 60% 15%,
+      rgba(95, 208, 224, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 50% at 35% 85%,
+      rgba(226, 114, 91, 0.12),
+      transparent 70%
+    );
+
+  /* Meander stencils. Each file is exactly one repeat unit, tight-cropped, with
+     the tile's aspect ratio baked into its viewBox:
+       square  76.921 x 100      t  109.104 x 100      wave  121.569 x 100
+     The t tile is a mirrored pair — one key plus its reflection — so each repeat
+     reads as a single wide T rather than a one-way running key. */
+  --meander-square: url("/images/meander-square.svg");
+  --meander-t: url("/images/meander-t.svg");
+  --meander-wave: url("/images/meander-wave.svg");
 
   /* 1.5px star dots at fixed coordinates. Each layer is one dot; add or move at will. */
   --gradient-star-field:
@@ -81,13 +120,29 @@
   --primary: var(--color-god);
   --primary-foreground: var(--color-bg-deep);
 
-  --secondary: color-mix(in oklab, var(--color-star-white) 8%, var(--color-bg-deep));
+  --secondary: color-mix(
+    in oklab,
+    var(--color-star-white) 8%,
+    var(--color-bg-deep)
+  );
   --secondary-foreground: var(--color-star-white);
 
-  --muted: color-mix(in oklab, var(--color-star-white) 6%, var(--color-bg-deep));
-  --muted-foreground: color-mix(in oklab, var(--color-star-white) 62%, var(--color-bg-deep));
+  --muted: color-mix(
+    in oklab,
+    var(--color-star-white) 6%,
+    var(--color-bg-deep)
+  );
+  --muted-foreground: color-mix(
+    in oklab,
+    var(--color-star-white) 62%,
+    var(--color-bg-deep)
+  );
 
-  --accent: color-mix(in oklab, var(--color-star-white) 12%, var(--color-bg-deep));
+  --accent: color-mix(
+    in oklab,
+    var(--color-star-white) 12%,
+    var(--color-bg-deep)
+  );
   --accent-foreground: var(--color-star-white);
 
   --destructive: var(--color-monster);
@@ -109,9 +164,17 @@
   --sidebar-foreground: var(--color-star-white);
   --sidebar-primary: var(--color-god);
   --sidebar-primary-foreground: var(--color-bg-deep);
-  --sidebar-accent: color-mix(in oklab, var(--color-star-white) 12%, var(--color-bg-deep));
+  --sidebar-accent: color-mix(
+    in oklab,
+    var(--color-star-white) 12%,
+    var(--color-bg-deep)
+  );
   --sidebar-accent-foreground: var(--color-star-white);
-  --sidebar-border: color-mix(in oklab, var(--color-star-white) 14%, transparent);
+  --sidebar-border: color-mix(
+    in oklab,
+    var(--color-star-white) 14%,
+    transparent
+  );
   --sidebar-ring: var(--color-god);
 }
 
@@ -160,12 +223,30 @@
   --cat-border-alpha: 60%;
 
   --cat-bg: color-mix(in oklab, var(--cat) var(--cat-bg-alpha), transparent);
-  --cat-border: color-mix(in oklab, var(--cat) var(--cat-border-alpha), transparent);
-  --cat-fill-strong: color-mix(in oklab, var(--cat) 33%, transparent); /* {accent}55 */
-  --cat-fill-soft: color-mix(in oklab, var(--cat) 9%, transparent); /* {accent}18 */
+  --cat-border: color-mix(
+    in oklab,
+    var(--cat) var(--cat-border-alpha),
+    transparent
+  );
+  --cat-fill-strong: color-mix(
+    in oklab,
+    var(--cat) 33%,
+    transparent
+  ); /* {accent}55 */
+  --cat-fill-soft: color-mix(
+    in oklab,
+    var(--cat) 9%,
+    transparent
+  ); /* {accent}18 */
   --cat-glow: color-mix(in oklab, var(--cat) 35%, transparent);
+  --cat-glow-rest: color-mix(in oklab, var(--cat) 45%, transparent);
+  --cat-glow-pulse: color-mix(in oklab, var(--cat) 70%, transparent);
 
-  --gradient-portrait: linear-gradient(160deg, var(--cat-fill-strong), var(--cat-fill-soft));
+  --gradient-portrait: linear-gradient(
+    160deg,
+    var(--cat-fill-strong),
+    var(--cat-fill-soft)
+  );
   --gradient-cta: linear-gradient(135deg, var(--cat), var(--color-ink) 140%);
 }
 
@@ -258,7 +339,7 @@
     @apply font-sans;
   }
   body {
-    @apply bg-background text-foreground text-base leading-[1.65] antialiased;
+    @apply bg-indigo-950 text-foreground text-base leading-[1.65] antialiased;
     margin: 0;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -303,11 +384,67 @@
     @apply font-bold;
   }
 
+  /* Meander bands. The SVG is a stencil, not an image — `mask-image` punches the
+     pattern out of `background-color: currentColor`, so the band takes whatever
+     text color is in scope (`text-cat`, `text-god`, `text-ink/40`, …). An <img>
+     or background-image could not be recolored: these live in public/ and are
+     fetched as separate documents, so `fill="currentColor"` inside them never
+     resolves against your page.
+
+     Each file is exactly one repeat unit, so `repeat-x` is seamless. Set the
+     height with any h-* utility; the width follows the tile's aspect ratio.
+     Decorative — mark them aria-hidden. */
+  .meander {
+    height: --spacing(5);
+    background-color: currentColor;
+    mask-image: var(--meander, var(--meander-square));
+    mask-repeat: repeat-x;
+    mask-size: auto 100%;
+    mask-position: center;
+  }
+
+  .meander-square {
+    --meander: var(--meander-square);
+  }
+  .meander-t {
+    --meander: var(--meander-t);
+  }
+  .meander-wave {
+    --meander: var(--meander-wave);
+  }
+
+  /* Mirror vertically — pair with .meander for a matching bottom edge. */
+  .meander-flip {
+    scale: 1 -1;
+  }
+
+  /* Dissolve both ends, so a divider doesn't collide with the page edge. */
+  .meander-fade {
+    mask-image:
+      var(--meander, var(--meander-square)),
+      linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+    mask-repeat: repeat-x, no-repeat;
+    mask-size:
+      auto 100%,
+      100% 100%;
+    mask-composite: intersect;
+  }
+
   /* Hero <h1>. Gradient text needs the clip trio, so it can't be a plain token. */
   .text-gradient-title {
     background-image: var(--gradient-title);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 24px 3px var(--cat-glow-rest);
+  }
+  50% {
+    box-shadow: 0 0 48px 12px var(--cat-glow-pulse);
   }
 }
