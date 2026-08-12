@@ -19,7 +19,7 @@ export function CardPerson({ character }: CardPersonProps) {
   return (
     <Card
       data-category={category}
-      className="flex flex-col pt-0 shadow-[0_0_24px_3px_var(--cat-glow-rest)] transition-[box-shadow,transform] duration-300 ease-out hover:z-5 hover:scale-110 hover:animate-glow-pulse"
+      className="flex flex-col pt-0 shadow-[0_0_24px_3px_var(--cat-glow-rest)] transition-transform duration-300 ease-out hover:z-5 hover:scale-110 hover:animate-glow-pulse"
     >
       <div className="relative overflow-hidden">
         {showPortrait ? (

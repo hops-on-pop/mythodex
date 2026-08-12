@@ -18,6 +18,7 @@
 @theme {
   --color-bg-deep: #0b0e1a;
   --color-parchment: #f2e8d0;
+  --color-parchment-dark: #e6d5ac;
   --color-ink: #2a2118;
   --color-ink-soft: #3a2f22;
   --color-star-white: #efe9da;
@@ -87,6 +88,16 @@
   --meander-t: url("/images/meander-t.svg");
   --meander-wave: url("/images/meander-wave.svg");
 
+  /* Category seals, same stencil trick as the meanders. Every glyph in these
+     files is an outline — the arc lettering included — so they carry no font
+     dependency and mask cleanly. Keep the artboards square and near-identical
+     (1556.79, bar monster's 1548.29) or the seals drift out of optical step at
+     a shared size. */
+  --badge-god: url("/images/god-badge.svg");
+  --badge-hero: url("/images/hero-badge.svg");
+  --badge-titan: url("/images/titan-badge.svg");
+  --badge-monster: url("/images/monster-badge.svg");
+
   /* 1.5px star dots at fixed coordinates. Each layer is one dot; add or move at will. */
   --gradient-star-field:
     radial-gradient(1.5px 1.5px at 12% 18%, #e0c25f, transparent),
@@ -99,6 +110,42 @@
     radial-gradient(1.5px 1.5px at 79% 14%, #efe9da, transparent),
     radial-gradient(1.5px 1.5px at 88% 52%, #a06be0, transparent),
     radial-gradient(1.5px 1.5px at 94% 33%, #e0c25f, transparent);
+
+  /* Paper fibre — one tiling square of greyscale fractal noise, blended
+     soft-light so it roughens the parchment without greying it. Frequency is
+     deliberately high (0.9): lower values read as clouds, not fibre. The
+     feComponentTransfer is what makes it visible at all — raw turbulence sits
+     around mid-grey, and mid-grey under soft-light is very nearly a no-op. */
+  --parchment-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.8' intercept='-0.4'/%3E%3CfeFuncG type='linear' slope='1.8' intercept='-0.4'/%3E%3CfeFuncB type='linear' slope='1.8' intercept='-0.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E");
+
+  /* Age staining. Sized in px rather than %, so a long character page gets more
+     blotches instead of four stretched ones. */
+  --parchment-mottle:
+    radial-gradient(
+      420px 260px at 14% 6%,
+      rgba(150, 112, 58, 0.1),
+      transparent 70%
+    ),
+    radial-gradient(
+      360px 300px at 84% 18%,
+      rgba(122, 88, 44, 0.09),
+      transparent 70%
+    ),
+    radial-gradient(
+      480px 320px at 58% 46%,
+      rgba(150, 112, 58, 0.07),
+      transparent 70%
+    ),
+    radial-gradient(
+      400px 280px at 22% 74%,
+      rgba(122, 88, 44, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      440px 300px at 78% 94%,
+      rgba(140, 104, 52, 0.09),
+      transparent 70%
+    );
 }
 
 /* ---------------------------------------------------------------------------
@@ -211,6 +258,49 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Torn sheet. Pair with .surface-parchment — that one flips the tokens, this
+   one paints the paper.
+
+   Everything physical (colour, fibre, stains, scorched rim) lives on ::before,
+   one layer behind the content, because the edges are chewed by an SVG
+   displacement filter and a filter applies to an element's whole subtree — put
+   it on the sheet itself and every glyph inside would wobble too.
+
+   Displacement runs on rendered pixels, so a tear is ~7px whether the sheet is
+   600px or 3000px tall. A stretched mask image can't do that: `mask-size: 100%
+   100%` scales the teeth with the box, which is why they smeared before.
+   --------------------------------------------------------------------------- */
+.parchment-sheet {
+  position: relative;
+  /* Contain the -1 pseudo so it can't slip behind an ancestor's background. */
+  isolation: isolate;
+  /* The paper is ::before; the box itself must not paint one. Wins over
+     .surface-parchment above by source order — same specificity, later rule. */
+  background-color: transparent;
+}
+
+.parchment-sheet::before {
+  content: "";
+  position: absolute;
+  /* Bleed, so the tear bites into the margin rather than into the padding. */
+  inset: -0.5rem;
+  z-index: -1;
+  background-color: var(--color-parchment);
+  background-image: var(--parchment-fiber), var(--parchment-mottle);
+  background-blend-mode: soft-light, normal, normal, normal, normal, normal;
+  /* Four insets, tight to wide: a fibrous dark lip right at the tear, then
+     washes that fade out well before the middle — dark border, light body. */
+  box-shadow:
+    inset 0 0 1px rgba(84, 56, 22, 0.5),
+    inset 0 0 7px rgba(112, 78, 34, 0.45),
+    inset 0 0 24px rgba(126, 94, 46, 0.32),
+    inset 0 0 90px rgba(138, 106, 58, 0.18);
+  /* drop-shadow comes after the displacement, so the cast shadow follows the
+     torn silhouette instead of the original rectangle. */
+  filter: url(#parchment-tear) drop-shadow(0 14px 26px rgba(2, 4, 12, 0.55));
+}
+
+/* ---------------------------------------------------------------------------
    Category accents. One contextual hue, rebound per category — put
    `data-category={character.category}` on the card/page root and every
    descendant picks it up. Defaults to god so tokens never resolve empty.
@@ -219,6 +309,7 @@
 [data-category] {
   --cat: var(--color-god);
   --cat-ink: var(--color-god-ink);
+  --badge: var(--badge-god);
   --cat-bg-alpha: 20%;
   --cat-border-alpha: 60%;
 
@@ -253,11 +344,13 @@
 [data-category="god"] {
   --cat: var(--color-god);
   --cat-ink: var(--color-god-ink);
+  --badge: var(--badge-god);
 }
 
 [data-category="hero"] {
   --cat: var(--color-hero);
   --cat-ink: var(--color-hero-ink);
+  --badge: var(--badge-hero);
   --cat-bg-alpha: 18%;
   --cat-border-alpha: 55%;
 }
@@ -265,6 +358,7 @@
 [data-category="titan"] {
   --cat: var(--color-titan);
   --cat-ink: var(--color-titan-ink);
+  --badge: var(--badge-titan);
   --cat-bg-alpha: 18%;
   --cat-border-alpha: 55%;
 }
@@ -272,6 +366,7 @@
 [data-category="monster"] {
   --cat: var(--color-monster);
   --cat-ink: var(--color-monster-ink);
+  --badge: var(--badge-monster);
 }
 
 /* ---------------------------------------------------------------------------
@@ -430,12 +525,47 @@
     mask-composite: intersect;
   }
 
+  /* Category seal. Same masked-silhouette approach as .meander, so it tints
+     with any text colour — text-cat-ink on parchment, text-cat on the night
+     background. Size it with size-*; the art is square.
+
+     Which seal appears comes from --badge, set alongside --cat in the category
+     scopes above. That is deliberately a token and not a descendant selector:
+     custom properties apply to the element that declares them *and* inherit
+     down, so this works whether data-category sits on an ancestor (the
+     character sheet, a card) or on the badge itself (the filter buttons).
+
+     Any content inside gets masked along with the box, so keep it empty and
+     name it with aria-label. It is not decorative — the seal names the
+     category, and on the character page nothing else does. */
+  .badge {
+    background-color: currentColor;
+    mask-image: var(--badge);
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    mask-position: center;
+  }
+
   /* Hero <h1>. Gradient text needs the clip trio, so it can't be a plain token. */
   .text-gradient-title {
     background-image: var(--gradient-title);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  .list-star {
+    list-style-type: "\2726";
+  }
+
+  .list-star > li {
+    padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .list-star > li::marker {
+    color: var(--cat-ink);
+    font-size: 1.2em;
   }
 }
 

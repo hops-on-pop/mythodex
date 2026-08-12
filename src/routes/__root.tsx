@@ -8,6 +8,41 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
+      {/* Deckle edge for .parchment-sheet. CSS `filter: url(#…)` resolves against
+          the document, not the stylesheet, so the filter has to be a real node —
+          mounted once here rather than per sheet, which would duplicate the id.
+          baseFrequency sets the tear's wavelength (~28px), scale its depth
+          (±7px); raise scale for a rougher tear, lower it for a clean cut. */}
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        className="pointer-events-none absolute size-0"
+      >
+        <filter
+          id="parchment-tear"
+          x="-2%"
+          y="-2%"
+          width="104%"
+          height="104%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.035"
+            numOctaves="4"
+            seed="7"
+            result="noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="noise"
+            scale="14"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </svg>
+
       <header className="relative isolate overflow-hidden">
         <div
           aria-hidden="true"

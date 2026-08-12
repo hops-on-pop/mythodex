@@ -135,6 +135,13 @@ export interface Character {
   romanName?: string;
   blurb: string; // grid card, 1–2 sentences
   body: string[]; // detail page paragraphs
+  /**
+   * "Did You Know?" — 2–4 self-contained oddities, each one sentence or two.
+   * These are the things that don't fit the narrative of `body`: etymologies,
+   * cult practice, the odd survival into modern language. Each item stands
+   * alone, so they can be shuffled or shown one at a time.
+   */
+  facts: string[];
   portrait?: string; // absent → CSS placeholder frame
   myths: MythSlug[];
 }
