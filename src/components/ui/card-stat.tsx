@@ -21,7 +21,7 @@ function CardStat({
     <div
       data-category={category}
       className={cn(
-        "rounded-lg border-b-3 border-r-3 border-cat bg-parchment-dark p-3 max-w-sm text-ink",
+        "rounded-lg border-b-3 border-r-3 border-cat bg-parchment-dark p-3 max-w-sm text-ink flex flex-col gap-1",
         className,
       )}
       {...props}
@@ -35,6 +35,7 @@ function CardStat({
               color="currentColor"
               strokeWidth={1.75}
               aria-hidden
+              className="mb-1.5"
             />
           )}
           {label}

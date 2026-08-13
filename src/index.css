@@ -16,7 +16,7 @@
    text-ink, border-god, etc.
    --------------------------------------------------------------------------- */
 @theme {
-  --color-bg-deep: #0b0e1a;
+  --color-bg-deep: #1e1b4b;
   --color-parchment: #f2e8d0;
   --color-parchment-dark: #e6d5ac;
   --color-ink: #2a2118;
@@ -28,7 +28,7 @@
   --color-god-ink: #8a6413;
   --color-hero: #5fd0e0;
   --color-hero-ink: #186878;
-  --color-titan: #a06be0;
+  --color-titan: #a672e2;
   --color-titan-ink: #5b3486;
   --color-monster: #e2725b;
   --color-monster-ink: #8f3225;
@@ -45,14 +45,14 @@
     90deg,
     #f3dfa0,
     #e07a4f 45%,
-    #a06be0 75%,
+    var(--color-titan) 75%,
     #5fd0e0
   );
   --gradient-divider: linear-gradient(
     90deg,
     #c9a24b,
     #e2725b,
-    #a06be0,
+    var(--color-titan),
     #5fd0e0
   );
 
@@ -65,7 +65,7 @@
     ),
     radial-gradient(
       ellipse 55% 50% at 85% 70%,
-      rgba(160, 107, 224, 0.16),
+      color-mix(in srgb, var(--color-titan) 16%, transparent),
       transparent 70%
     ),
     radial-gradient(
@@ -103,12 +103,12 @@
     radial-gradient(1.5px 1.5px at 12% 18%, #e0c25f, transparent),
     radial-gradient(1.5px 1.5px at 27% 62%, #efe9da, transparent),
     radial-gradient(1.5px 1.5px at 38% 9%, #5fd0e0, transparent),
-    radial-gradient(1.5px 1.5px at 46% 44%, #a06be0, transparent),
+    radial-gradient(1.5px 1.5px at 46% 44%, var(--color-titan), transparent),
     radial-gradient(1.5px 1.5px at 54% 77%, #efe9da, transparent),
     radial-gradient(1.5px 1.5px at 63% 28%, #e0c25f, transparent),
     radial-gradient(1.5px 1.5px at 71% 88%, #5fd0e0, transparent),
     radial-gradient(1.5px 1.5px at 79% 14%, #efe9da, transparent),
-    radial-gradient(1.5px 1.5px at 88% 52%, #a06be0, transparent),
+    radial-gradient(1.5px 1.5px at 88% 52%, var(--color-titan), transparent),
     radial-gradient(1.5px 1.5px at 94% 33%, #e0c25f, transparent);
 
   /* Paper fibre — one tiling square of greyscale fractal noise, blended
@@ -434,7 +434,7 @@
     @apply font-sans;
   }
   body {
-    @apply bg-indigo-950 text-foreground text-base leading-[1.65] antialiased;
+    @apply bg-background text-foreground text-base leading-[1.65] antialiased;
     margin: 0;
     font-synthesis: none;
     text-rendering: optimizeLegibility;

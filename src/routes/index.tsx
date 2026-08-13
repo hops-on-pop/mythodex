@@ -39,6 +39,10 @@ function RouteComponent() {
             />
           ))}
         </nav>
+        <div
+          aria-hidden="true"
+          className="meander meander-square meander-fade mx-auto mb-14 h-7 max-w-350 text-star-white/25"
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 xl:gap-10 px-4">
           {characterList.map((character) => (
@@ -55,7 +59,7 @@ function RouteComponent() {
 
         <div
           aria-hidden="true"
-          className="meander meander-square meander-fade mx-auto mt-14 h-7 max-w-210 text-star-white/25"
+          className="meander meander-square meander-fade mx-auto mt-14 h-7 max-w-350 text-star-white/25"
         />
       </main>
     </>

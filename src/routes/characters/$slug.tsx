@@ -25,6 +25,7 @@ function RouteComponent() {
     portrait,
     domains,
     symbols,
+    blurb,
     body,
     facts,
   } = character
@@ -45,7 +46,7 @@ function RouteComponent() {
       >
         <div
           aria-hidden="true"
-          className="meander meander-square h-8 text-cat"
+          className="meander meander-square meander-fade h-8 text-cat"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full py-8">
           {/* min-w-0 on each column — grid tracks default to min-width:auto, so
@@ -72,6 +73,7 @@ function RouteComponent() {
             <p className="text-lg font-italic text-cat-ink pt-2">
               {pronunciation}
             </p>
+            <p className="text-ink text-lg pt-8 pr-6">{blurb}</p>
           </div>
           <div className="flex flex-col min-w-0">
             {/* Fluid below its natural 300px — a fixed w-75 is wider than the
@@ -82,23 +84,31 @@ function RouteComponent() {
               className="w-full max-w-75 h-112.5 object-cover rounded-lg"
             />
           </div>
-          <div className="flex flex-col gap-4 min-w-0">
+          <div className="flex flex-col gap-8 min-w-0">
             <CardStat category={category} label="Domains" icon={JupiterIcon}>
-              {domains.join(", ")}
+              <div className="grid grid-cols-2">
+                {domains.map((domain) => (
+                  <span key={domain}>{domain}</span>
+                ))}
+              </div>
             </CardStat>
             <CardStat
               category={category}
               label="Symbols"
               icon={ShieldEnergyIcon}
             >
-              {symbols.join(", ")}
+              <div className="grid grid-cols-2">
+                {symbols.map((symbol) => (
+                  <span key={symbol}>{symbol}</span>
+                ))}
+              </div>
             </CardStat>
             <CardFamily category={category} family={family} />
           </div>
         </div>
         <div
           aria-hidden="true"
-          className="meander meander-square h-8 text-cat"
+          className="meander meander-square meander-fade h-8 text-cat"
         />
         <div className="flex flex-col gap-4 pt-8">
           <h2 className="text-2xl font-bold text-cat-ink">The Story</h2>
@@ -116,7 +126,7 @@ function RouteComponent() {
         </div>
         <div
           aria-hidden="true"
-          className="meander meander-square h-8 text-cat"
+          className="meander meander-square meander-fade h-8 text-cat"
         />
       </main>
     </div>

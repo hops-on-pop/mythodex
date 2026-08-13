@@ -57,7 +57,7 @@ function RootComponent() {
           className="absolute inset-0 -z-10 bg-(image:--gradient-star-field)"
         />
 
-        <div className="mx-auto flex max-w-225 flex-col items-center gap-5 px-5 py-12 text-center">
+        <div className="mx-auto flex max-w-225 flex-col items-center gap-2 px-5 py-8 text-center">
           <Link to="/">
             <h1 className="text-gradient-title">MythoDex</h1>
           </Link>
