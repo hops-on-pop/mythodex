@@ -2,13 +2,29 @@ import { createFileRoute } from "@tanstack/react-router"
 import { CardPerson } from "@/components/card-person"
 import { characters } from "@/data/characters"
 import type { Character } from "@/data/types"
+import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
 
+const CATEGORY_ORDER = ["god", "hero", "titan", "monster"] as const
+
+type Category = (typeof CATEGORY_ORDER)[number]
+
+interface IndexSearch {
+  category?: Category
+}
+
+function isCategory(value: unknown): value is Category {
+  return CATEGORY_ORDER.includes(value as Category)
+}
+
 export const Route = createFileRoute("/")({
+  // Typed search params rather than useState: a filtered grid is a shareable
+  // URL and back/forward walks the filter history. An unknown `?category=`
+  // drops out here, so the component never sees a value off the union.
+  validateSearch: (search: Record<string, unknown>): IndexSearch =>
+    isCategory(search.category) ? { category: search.category } : {},
   component: RouteComponent,
 })
-
-const CATEGORY_ORDER = ["god", "hero", "titan", "monster"] as const
 
 const characterList: Character[] = Object.values(characters).sort((a, b) =>
   a.name.localeCompare(b.name),
@@ -19,25 +35,41 @@ const categories = CATEGORY_ORDER.filter((category) =>
 )
 
 function RouteComponent() {
+  const { category: active } = Route.useSearch()
+
+  const visible = active
+    ? characterList.filter((character) => character.category === active)
+    : characterList
+
   return (
     <>
       <main className="mx-auto w-full max-w-350 pt-10 pb-24">
-        <nav className="mb-10 flex flex-wrap justify-center gap-4">
-          {/* data-category sits on the button itself, which is all .badge
-              needs — it reads --badge off the element, not off an ancestor.
-              text-cat rather than text-cat-ink: the ink tones are pitched for
-              parchment and go muddy against the night background.
-              No children — the mask clips whatever is inside, and the art
-              already carries the word, so the name lives on aria-label. */}
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              data-category={category}
-              aria-label={`Filter by ${category}`}
-              className="badge size-24 md:size-28 xl:size-36 text-cat cursor-pointer transition-transform duration-200 ease-out hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cat"
-            />
-          ))}
+        <nav
+          aria-label="Filter by category"
+          className="mb-10 flex flex-wrap justify-center gap-4"
+        >
+          {categories.map((category) => {
+            const isActive = active === category
+            return (
+              <Link
+                key={category}
+                to="/"
+                search={isActive ? {} : { category }}
+                data-category={category}
+                aria-label={
+                  isActive
+                    ? `Clear ${category} filter`
+                    : `Filter by ${category}`
+                }
+                aria-current={isActive ? "true" : undefined}
+                className={cn(
+                  "badge size-24 md:size-28 xl:size-36 text-cat cursor-pointer transition duration-200 ease-out hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cat",
+                  isActive && "scale-105",
+                  active && !isActive && "opacity-35 hover:opacity-75",
+                )}
+              />
+            )
+          })}
         </nav>
         <div
           aria-hidden="true"
@@ -45,7 +77,7 @@ function RouteComponent() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 xl:gap-10 px-4">
-          {characterList.map((character) => (
+          {visible.map((character) => (
             <Link
               key={character.slug}
               to="/characters/$slug"
