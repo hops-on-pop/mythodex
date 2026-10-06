@@ -7,16 +7,19 @@ This doc owns architecture, data model, and sequencing.
 
 | Decision    | Choice                                                             |
 | ----------- | ------------------------------------------------------------------ |
-| Stack       | Vite + React 19 + TanStack Router (SPA, no server)                 |
+| Stack       | Astro, static output (prerendered pages, no server)                |
 | Styling     | Tailwind 4, tokens generated from `design-system.md`               |
 | Content     | Hand-authored TypeScript, ~40–50 figures                           |
 | Portraits   | AI-generated, added incrementally; CSS placeholder is the fallback |
 | Family tree | Local per-character panel first; global genealogy as a later phase |
 | Myths       | Short blurbs now, data model built to grow into long-form          |
 
-**Known tradeoff:** a pure SPA has no SEO and no link previews. Accepted for now.
-TanStack Router's prerendering, or a migration up to TanStack Start, are the exits
-if this ever wants to be findable. Routes won't need rewriting either way.
+**Stack change (October 2026):** the site began as a Vite + React + TanStack
+Router SPA and moved to Astro. A SPA paints nothing until its JavaScript runs, and
+it had no SEO or link previews. Every page here is known at build time, so Astro
+prerenders all of them and ships almost no JavaScript. Starwind replaced shadcn
+as the component kit. Phase notes below that mention React or TanStack Router
+describe the original build.
 
 ---
 
@@ -131,8 +134,8 @@ serverless SPA, and content that reviews as a git diff. The entire dataset at
 
 The signals that would actually flip this: multiple non-technical authors, or
 queries you can't express as array operations over an in-memory index. Neither
-is on the horizon. The nearer concern is bundle size once prose accumulates —
-solved by route-level code splitting, which TanStack Router does natively.
+is on the horizon. Bundle size isn't a concern as prose accumulates: pages are
+rendered at build time, so the data never ships to the browser.
 
 ### Myths, shaped to grow
 
@@ -186,11 +189,11 @@ Route shape:
 
 `src/index.css` translates `design-system.md` into three layered scopes:
 
-| Scope                | Role                                                              |
-| -------------------- | ----------------------------------------------------------------- |
-| `:root`              | night sky — the default surface                                   |
-| `.surface-parchment` | inverts background/foreground/muted/border for everything inside  |
-| `[data-category=…]`  | rebinds `--cat` and its derived bg/border/fill/glow                |
+| Scope                | Role                                                             |
+| -------------------- | ---------------------------------------------------------------- |
+| `:root`              | night sky — the default surface                                  |
+| `.surface-parchment` | inverts background/foreground/muted/border for everything inside |
+| `[data-category=…]`  | rebinds `--cat` and its derived bg/border/fill/glow              |
 
 Raw brand values live in a plain `@theme` block (`--color-bg-deep`,
 `--color-parchment`, `--color-god`, …); semantic roles map through
@@ -248,9 +251,10 @@ _Content writing starts here and runs in parallel from this point on._
 ### Phase 3 — Browse grid
 
 Hero (gradient title, star field, divider bar) + the `auto-fill minmax(200px)`
-grid. Filter chips write to **typed search params** — `?category=titan` — so
-filtered views are shareable and back/forward work correctly. This is the payoff
-for choosing TanStack Router; don't reimplement it with `useState`.
+grid. Filter chips write to the URL — `?category=titan` — so filtered views are
+shareable and back/forward work correctly. Since the Astro move this is a short
+script in `pages/index.astro`: the filter is a `data-filter` attribute on
+`<html>` and CSS does the hiding.
 
 ### Phase 4 — Character detail
 

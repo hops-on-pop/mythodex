@@ -1,20 +1,26 @@
-// Site-wide metadata for route `head`s. The canonical origin comes from
-// VITE_SITE_URL (see .env.example) — without it, canonical links are skipped
-// rather than pointing at the wrong host.
+// Site-wide metadata. The public origin is Astro's `site` (astro.config.mjs);
+// pages read it as `Astro.site`.
 
 export const SITE_NAME = "MythoDex"
 
 export const SITE_DESCRIPTION =
   "An illustrated field guide to Greek mythology: the gods, Titans, heroes and monsters, with their stories, symbols and family trees."
 
-const SITE_URL = import.meta.env.VITE_SITE_URL?.replace(/\/+$/, "")
-
-/** A site path as an absolute URL, or the bare path if no origin is set. */
-export function absoluteUrl(pathname: string) {
-  return `${SITE_URL ?? ""}${pathname}`
+/**
+ * The public path for the page being built. With `build.format: "file"`,
+ * Astro.url.pathname carries the output file's `.html`, but Cloudflare serves
+ * every page without it — so canonical and Open Graph URLs drop it too.
+ */
+export function publicPath(url: URL): string {
+  return url.pathname.replace(/(\/index)?\.html$/, "") || "/"
 }
 
-/** `links` entry for a route's canonical URL, or nothing if no origin is set. */
-export function canonical(pathname: string) {
-  return SITE_URL ? [{ rel: "canonical", href: `${SITE_URL}${pathname}` }] : []
-}
+export const CATEGORY_ORDER = ["god", "hero", "titan", "monster"] as const
+
+export const CATEGORY_PLURAL: Record<(typeof CATEGORY_ORDER)[number], string> =
+  {
+    god: "gods",
+    hero: "heroes",
+    titan: "titans",
+    monster: "monsters",
+  }

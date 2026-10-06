@@ -1,0 +1,62 @@
+---
+import Portrait from "@/components/Portrait.astro"
+import { Card, CardContent, CardTitle } from "@/components/starwind/card"
+import type { Character } from "@/data/types"
+import { portraitOf } from "@/lib/portraits"
+
+// The rendered card width at each grid breakpoint in pages/index.astro — 1, 2,
+// 3, then 4 columns, less the gutters. Keep in step with that grid.
+const CARD_SIZES =
+  "(min-width: 1280px) 312px, (min-width: 768px) calc(33vw - 27px), (min-width: 640px) calc(50vw - 24px), calc(100vw - 32px)"
+
+interface Props {
+  character: Character
+  /** First row of the grid — see Portrait's `priority`. */
+  priority?: boolean
+}
+
+const { character, priority = false } = Astro.props
+const { slug, name, epithet, category } = character
+
+// The art lands incrementally, so a figure with no portrait yet gets the
+// placeholder frame instead.
+const portrait = portraitOf(slug)
+---
+
+<Card
+  data-category={category}
+  class="[--card-spacing:--spacing(4)] text-sm overflow-hidden pt-0 shadow-[0_0_24px_3px_var(--cat-glow-rest)] transition-transform duration-300 ease-out hover:z-5 hover:scale-110 hover:animate-glow-pulse"
+>
+  <div class="relative overflow-hidden">
+    {/* Decorative here: the link around the card already reads out the name
+        and epithet, so alt text would only repeat them. */}
+    {portrait ? (
+      <Portrait
+        src={portrait}
+        sizes={CARD_SIZES}
+        priority={priority}
+        alt=""
+        class="block aspect-2/3 w-full object-cover"
+      />
+    ) : (
+      <div
+        class="flex aspect-2/3 items-center justify-center border-3 border-cat bg-(image:--gradient-portrait) p-4 text-center text-xs text-muted-foreground"
+        aria-hidden="true"
+      >
+        {name}
+      </div>
+    )}
+    <div class="absolute top-[5%] right-[-20%] z-10 w-3/4 rotate-40 bg-cat px-10 py-2 text-center font-bold text-ink uppercase shadow-md">
+      {category}
+    </div>
+    <div
+      aria-hidden="true"
+      class="meander meander-square h-5 text-cat"
+    ></div>
+  </div>
+
+  <CardContent>
+    <CardTitle class="text-2xl pt-1">{name}</CardTitle>
+    <span>{epithet}</span>
+  </CardContent>
+</Card>

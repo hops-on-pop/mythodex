@@ -5,26 +5,26 @@
 // produced by walking `parent-of` backwards, and that is the only way it can be
 // produced. Built once at module load; all lookups below are map reads.
 
-import { characterList, characters } from "@/data/characters";
-import type { Character, CharacterSlug, Relation } from "@/data/types";
+import { characterList, characters } from "@/data/characters"
+import type { Character, CharacterSlug, Relation } from "@/data/types"
 
 type CharacterRelation = Extract<
   Relation,
   { type: "parent-of" | "consort-of" | "slew" | "transformed-into" }
->;
+>
 
 /** An authored edge with its implicit `from` made explicit. */
 export interface Edge {
-  from: CharacterSlug;
-  type: Relation["type"];
-  to: string;
-  note?: string;
+  from: CharacterSlug
+  type: Relation["type"]
+  to: string
+  note?: string
 }
 
 /** Edges whose `to` is known to be another character in this atlas. */
 export interface CharacterEdge extends Edge {
-  type: CharacterRelation["type"];
-  to: CharacterSlug;
+  type: CharacterRelation["type"]
+  to: CharacterSlug
 }
 
 const CHARACTER_EDGE_TYPES = new Set<Relation["type"]>([
@@ -32,7 +32,7 @@ const CHARACTER_EDGE_TYPES = new Set<Relation["type"]>([
   "consort-of",
   "slew",
   "transformed-into",
-]);
+])
 
 export const edges: Edge[] = characterList.flatMap((character) =>
   character.relations.map((relation) => ({
@@ -41,7 +41,7 @@ export const edges: Edge[] = characterList.flatMap((character) =>
     to: relation.to,
     ...(relation.note ? { note: relation.note } : {}),
   })),
-);
+)
 
 /**
  * `to` is only typed as a character on the variants that point at one — the
@@ -50,33 +50,31 @@ export const edges: Edge[] = characterList.flatMap((character) =>
  */
 const characterEdges = edges.filter((edge): edge is CharacterEdge =>
   CHARACTER_EDGE_TYPES.has(edge.type),
-);
+)
 
 function groupBy(
   list: CharacterEdge[],
   key: (edge: CharacterEdge) => CharacterSlug,
 ): Map<CharacterSlug, CharacterEdge[]> {
-  const index = new Map<CharacterSlug, CharacterEdge[]>();
+  const index = new Map<CharacterSlug, CharacterEdge[]>()
   for (const edge of list) {
-    const bucket = index.get(key(edge));
-    if (bucket) bucket.push(edge);
-    else index.set(key(edge), [edge]);
+    const bucket = index.get(key(edge))
+    if (bucket) bucket.push(edge)
+    else index.set(key(edge), [edge])
   }
-  return index;
+  return index
 }
 
-const parentEdges = characterEdges.filter((edge) => edge.type === "parent-of");
-const consortEdges = characterEdges.filter(
-  (edge) => edge.type === "consort-of",
-);
+const parentEdges = characterEdges.filter((edge) => edge.type === "parent-of")
+const consortEdges = characterEdges.filter((edge) => edge.type === "consort-of")
 
 /** slug → edges pointing *at* it. The reverse index; never authored by hand. */
-const byTarget = groupBy(characterEdges, (edge) => edge.to);
+const byTarget = groupBy(characterEdges, (edge) => edge.to)
 /** slug → edges authored *on* it. */
-const bySource = groupBy(characterEdges, (edge) => edge.from);
+const bySource = groupBy(characterEdges, (edge) => edge.from)
 
 function unique(slugs: CharacterSlug[]): CharacterSlug[] {
-  return [...new Set(slugs)];
+  return [...new Set(slugs)]
 }
 
 /** Who declared `parent-of` this figure. */
@@ -85,7 +83,7 @@ export function parentsOf(slug: CharacterSlug): CharacterSlug[] {
     (byTarget.get(slug) ?? [])
       .filter((edge) => edge.type === "parent-of")
       .map((edge) => edge.from),
-  );
+  )
 }
 
 /** Who this figure declared `parent-of`. */
@@ -94,7 +92,7 @@ export function childrenOf(slug: CharacterSlug): CharacterSlug[] {
     (bySource.get(slug) ?? [])
       .filter((edge) => edge.type === "parent-of")
       .map((edge) => edge.to),
-  );
+  )
 }
 
 /**
@@ -105,14 +103,14 @@ export function childrenOf(slug: CharacterSlug): CharacterSlug[] {
 export function consortsOf(slug: CharacterSlug): CharacterSlug[] {
   const explicit = consortEdges
     .filter((edge) => edge.from === slug || edge.to === slug)
-    .map((edge) => (edge.from === slug ? edge.to : edge.from));
+    .map((edge) => (edge.from === slug ? edge.to : edge.from))
 
-  const own = new Set(childrenOf(slug));
+  const own = new Set(childrenOf(slug))
   const coParents = parentEdges
     .filter((edge) => edge.from !== slug && own.has(edge.to))
-    .map((edge) => edge.from);
+    .map((edge) => edge.from)
 
-  return unique([...explicit, ...coParents]).filter((other) => other !== slug);
+  return unique([...explicit, ...coParents]).filter((other) => other !== slug)
 }
 
 /**
@@ -121,21 +119,21 @@ export function consortsOf(slug: CharacterSlug): CharacterSlug[] {
  * genuine half-brother to the children of Cronus and Rhea.
  */
 export function siblingsOf(slug: CharacterSlug): CharacterSlug[] {
-  const parents = parentsOf(slug);
+  const parents = parentsOf(slug)
   return unique(parents.flatMap((parent) => childrenOf(parent))).filter(
     (other) => other !== slug,
-  );
+  )
 }
 
 export interface Family {
-  parents: Character[];
-  consorts: Character[];
-  siblings: Character[];
-  children: Character[];
+  parents: Character[]
+  consorts: Character[]
+  siblings: Character[]
+  children: Character[]
 }
 
 const resolve = (slugs: CharacterSlug[]): Character[] =>
-  slugs.map((slug) => characters[slug]);
+  slugs.map((slug) => characters[slug])
 
 /** Everything the family panel needs, resolved to full records. */
 export function familyOf(slug: CharacterSlug): Family {
@@ -144,7 +142,7 @@ export function familyOf(slug: CharacterSlug): Family {
     consorts: resolve(consortsOf(slug)),
     siblings: resolve(siblingsOf(slug)),
     children: resolve(childrenOf(slug)),
-  };
+  }
 }
 
 /** True when a figure has no family edges at all, in or out. */
@@ -154,5 +152,5 @@ export function hasFamily(family: Family): boolean {
     family.consorts.length > 0 ||
     family.siblings.length > 0 ||
     family.children.length > 0
-  );
+  )
 }

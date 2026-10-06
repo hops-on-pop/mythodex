@@ -66,7 +66,7 @@ export type CharacterSlug =
   | "cadmus"
   | "chiron"
   | "hector"
-  | "daedalus";
+  | "daedalus"
 
 // Objects are not a real entity type yet — no `Record<ObjectSlug, _>` exists.
 // The union is here so `wields` edges can be authored and type-checked now,
@@ -81,15 +81,10 @@ export type ObjectSlug =
   | "club-of-heracles"
   | "winged-sandals"
   | "golden-fleece"
-  | "lyre";
+  | "lyre"
 
 export type PlaceSlug =
-  | "olympus"
-  | "underworld"
-  | "athens"
-  | "delphi"
-  | "delos"
-  | "eleusis";
+  "olympus" | "underworld" | "athens" | "delphi" | "delos" | "eleusis"
 
 export type MythSlug =
   | "titanomachy"
@@ -103,7 +98,7 @@ export type MythSlug =
   | "trojan-war"
   | "the-odyssey"
   | "orpheus-in-the-underworld"
-  | "oedipus-at-thebes";
+  | "oedipus-at-thebes"
 
 // `from` is implicit — it's whichever entity owns the array. Author each edge
 // once; `lib/graph.ts` derives every inverse (child-of, slain-by, …).
@@ -113,14 +108,14 @@ export type Relation =
   | { type: "slew"; to: CharacterSlug; note?: string }
   | { type: "wields"; to: ObjectSlug; note?: string }
   | { type: "patron-of"; to: PlaceSlug; note?: string }
-  | { type: "transformed-into"; to: CharacterSlug; note?: string };
+  | { type: "transformed-into"; to: CharacterSlug; note?: string }
 
 export interface Character {
-  slug: CharacterSlug;
-  name: string;
-  epithet: string; // "King of the Gods"
-  pronunciation: string; // "ZOOS" — Kalam accent font
-  category: "god" | "hero" | "titan" | "monster";
+  slug: CharacterSlug
+  name: string
+  epithet: string // "King of the Gods"
+  pronunciation: string // "ZOOS" — Kalam accent font
+  category: "god" | "hero" | "titan" | "monster"
   /**
    * Genealogical depth, used as the y-axis band in the global tree (Phase 8):
    * 0 primordial, 1 titan, 2 the children of Cronus, 3 the children of Zeus.
@@ -128,35 +123,30 @@ export interface Character {
    * Olympian council but are a generation below Zeus, and drawing them in the
    * same band would put parent and child on one row.
    */
-  generation: number;
-  relations: Relation[];
-  domains: string[];
-  symbols: string[];
-  romanName?: string;
-  blurb: string; // grid card and meta description, 1–2 sentences
-  // No body/facts here: the long-form text lives in data/stories.ts so the home
-  // page doesn't download it. No portrait field either: art lives in
-  // art/portraits/{slug}.jpg and is looked up by slug — see lib/portraits.ts.
-  myths: MythSlug[];
-}
-
-/** The detail-page text for one figure. See data/stories.ts. */
-export interface Story {
-  body: string[]; // detail page paragraphs
+  generation: number
+  relations: Relation[]
+  domains: string[]
+  symbols: string[]
+  romanName?: string
+  blurb: string // grid card and meta description, 1–2 sentences
+  body: string[] // detail page paragraphs
   /**
    * "Did You Know?" — 2–4 self-contained oddities, each one sentence or two.
    * These are the things that don't fit the narrative of `body`: etymologies,
    * cult practice, the odd survival into modern language. Each item stands
    * alone, so they can be shuffled or shown one at a time.
    */
-  facts: string[];
+  facts: string[]
+  // No portrait field: art lives in src/assets/portraits/{slug}.jpg and is
+  // looked up by slug — see lib/portraits.ts. No file → CSS placeholder frame.
+  myths: MythSlug[]
 }
 
 export interface Myth {
-  slug: MythSlug;
-  title: string;
-  blurb: string;
-  cast: CharacterSlug[];
-  generation?: number;
-  body?: string[];
+  slug: MythSlug
+  title: string
+  blurb: string
+  cast: CharacterSlug[]
+  generation?: number
+  body?: string[]
 }

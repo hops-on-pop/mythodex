@@ -1,9 +1,0 @@
-{
-  "printWidth": 80,
-  "singleAttributePerLine": true,
-  "sortTailwindcss": {
-    "stylesheet": "./src/index.css",
-    "functions": ["cn", "cva", "clsx"],
-    "preserveWhitespace": true
-  }
-}

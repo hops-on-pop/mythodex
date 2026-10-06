@@ -1,0 +1,606 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+/* Starwind's form components expect this reset; harmless without forms. */
+@plugin "@tailwindcss/forms";
+
+/* No dark mode. This variant is kept deliberately as a no-op guard: the `.dark`
+   class is never applied, so any `dark:` utility shipped inside a Starwind
+   component compiles to a rule that can never match. Delete it and `dark:`
+   falls back to Tailwind's built-in prefers-color-scheme behaviour, which would
+   let a user's OS setting mutate the design. */
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   Brand palette — raw, immutable values. Generates utilities: bg-parchment,
+   text-ink, border-god, etc.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-bg-deep: #1e1b4b;
+  --color-parchment: #f2e8d0;
+  --color-parchment-dark: #e6d5ac;
+  --color-ink: #2a2118;
+  --color-ink-soft: #3a2f22;
+  --color-star-white: #efe9da;
+  --color-gold-white: #fff8e8;
+
+  --color-god: #c9a24b;
+  --color-god-ink: #8a6413;
+  --color-hero: #5fd0e0;
+  --color-hero-ink: #186878;
+  --color-titan: #a672e2;
+  --color-titan-ink: #5b3486;
+  --color-monster: #e2725b;
+  --color-monster-ink: #8f3225;
+
+  --animate-glow-pulse: glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Gradients. Plain :root vars — gradients generate no utilities, so there is
+   nothing to gain from @theme. Use with `bg-(image:--gradient-title)`.
+   --------------------------------------------------------------------------- */
+:root {
+  --gradient-title: linear-gradient(
+    90deg,
+    #f3dfa0,
+    #e07a4f 45%,
+    var(--color-titan) 75%,
+    #5fd0e0
+  );
+  --gradient-divider: linear-gradient(
+    90deg,
+    #c9a24b,
+    #e2725b,
+    var(--color-titan),
+    #5fd0e0
+  );
+
+  /* Ellipse sizes are not specified in the design doc — tuned by eye, adjust freely. */
+  --gradient-hero-wash:
+    radial-gradient(
+      ellipse 60% 55% at 15% 25%,
+      rgba(224, 194, 95, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 50% at 85% 70%,
+      color-mix(in srgb, var(--color-titan) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 45% at 60% 15%,
+      rgba(95, 208, 224, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 50% at 35% 85%,
+      rgba(226, 114, 91, 0.12),
+      transparent 70%
+    );
+
+  /* Meander stencils. Each file is exactly one repeat unit, tight-cropped, with
+     the tile's aspect ratio baked into its viewBox:
+       square  76.921 x 100      t  109.104 x 100      wave  121.569 x 100
+     The t tile is a mirrored pair — one key plus its reflection — so each repeat
+     reads as a single wide T rather than a one-way running key. */
+  --meander-square: url("../assets/images/meander-square.svg");
+  --meander-t: url("../assets/images/meander-t.svg");
+  --meander-wave: url("../assets/images/meander-wave.svg");
+
+  /* Category seals, same stencil trick as the meanders. Every glyph in these
+     files is an outline — the arc lettering included — so they carry no font
+     dependency and mask cleanly. Keep the artboards square and near-identical
+     (1556.79, bar monster's 1548.29) or the seals drift out of optical step at
+     a shared size. */
+  --badge-god: url("../assets/images/god-badge.svg");
+  --badge-hero: url("../assets/images/hero-badge.svg");
+  --badge-titan: url("../assets/images/titan-badge.svg");
+  --badge-monster: url("../assets/images/monster-badge.svg");
+
+  /* 1.5px star dots at fixed coordinates. Each layer is one dot; add or move at will. */
+  --gradient-star-field:
+    radial-gradient(1.5px 1.5px at 12% 18%, #e0c25f, transparent),
+    radial-gradient(1.5px 1.5px at 27% 62%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 38% 9%, #5fd0e0, transparent),
+    radial-gradient(1.5px 1.5px at 46% 44%, var(--color-titan), transparent),
+    radial-gradient(1.5px 1.5px at 54% 77%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 63% 28%, #e0c25f, transparent),
+    radial-gradient(1.5px 1.5px at 71% 88%, #5fd0e0, transparent),
+    radial-gradient(1.5px 1.5px at 79% 14%, #efe9da, transparent),
+    radial-gradient(1.5px 1.5px at 88% 52%, var(--color-titan), transparent),
+    radial-gradient(1.5px 1.5px at 94% 33%, #e0c25f, transparent);
+
+  /* Paper fibre — one tiling square of greyscale fractal noise, blended
+     soft-light so it roughens the parchment without greying it. Frequency is
+     deliberately high (0.9): lower values read as clouds, not fibre. The
+     feComponentTransfer is what makes it visible at all — raw turbulence sits
+     around mid-grey, and mid-grey under soft-light is very nearly a no-op. */
+  --parchment-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.8' intercept='-0.4'/%3E%3CfeFuncG type='linear' slope='1.8' intercept='-0.4'/%3E%3CfeFuncB type='linear' slope='1.8' intercept='-0.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='0.55'/%3E%3C/svg%3E");
+
+  /* Age staining. Sized in px rather than %, so a long character page gets more
+     blotches instead of four stretched ones. */
+  --parchment-mottle:
+    radial-gradient(
+      420px 260px at 14% 6%,
+      rgba(150, 112, 58, 0.1),
+      transparent 70%
+    ),
+    radial-gradient(
+      360px 300px at 84% 18%,
+      rgba(122, 88, 44, 0.09),
+      transparent 70%
+    ),
+    radial-gradient(
+      480px 320px at 58% 46%,
+      rgba(150, 112, 58, 0.07),
+      transparent 70%
+    ),
+    radial-gradient(
+      400px 280px at 22% 74%,
+      rgba(122, 88, 44, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      440px 300px at 78% 94%,
+      rgba(140, 104, 52, 0.09),
+      transparent 70%
+    );
+}
+
+/* ---------------------------------------------------------------------------
+   Semantic tokens — night sky is the default surface.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  --background: var(--color-bg-deep);
+  --foreground: var(--color-star-white);
+
+  --card: var(--color-parchment);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-parchment);
+  --popover-foreground: var(--color-ink);
+
+  /* Flat gold takes dark text — #fff8e8 on #c9a24b is ~1.9:1. Use --color-gold-white
+     only on the CTA, where the gradient falls to ink. */
+  --primary: var(--color-god);
+  --primary-foreground: var(--color-bg-deep);
+  --primary-accent: var(--color-god);
+
+  --secondary: color-mix(
+    in oklab,
+    var(--color-star-white) 8%,
+    var(--color-bg-deep)
+  );
+  --secondary-foreground: var(--color-star-white);
+  --secondary-accent: var(--color-star-white);
+
+  --muted: color-mix(
+    in oklab,
+    var(--color-star-white) 6%,
+    var(--color-bg-deep)
+  );
+  --muted-foreground: color-mix(
+    in oklab,
+    var(--color-star-white) 62%,
+    var(--color-bg-deep)
+  );
+
+  --accent: color-mix(
+    in oklab,
+    var(--color-star-white) 12%,
+    var(--color-bg-deep)
+  );
+  --accent-foreground: var(--color-star-white);
+
+  /* Starwind status tokens. Nothing uses them yet; mapped onto the palette so
+     a component added later never resolves to an empty value. */
+  --error: var(--color-monster);
+  --error-foreground: var(--color-ink);
+  --info: var(--color-hero);
+  --info-foreground: var(--color-ink);
+  --success: color-mix(in oklab, var(--color-hero) 60%, var(--color-god));
+  --success-foreground: var(--color-ink);
+  --warning: var(--color-god);
+  --warning-foreground: var(--color-ink);
+
+  --border: color-mix(in oklab, var(--color-star-white) 14%, transparent);
+  --input: color-mix(in oklab, var(--color-star-white) 20%, transparent);
+  --outline: var(--color-god);
+
+  /* 10px — the stat/fact card radius from the design doc. */
+  --radius: 0.625rem;
+
+  --sidebar-background: var(--color-bg-deep);
+  --sidebar-foreground: var(--color-star-white);
+  --sidebar-primary: var(--color-god);
+  --sidebar-primary-foreground: var(--color-bg-deep);
+  --sidebar-accent: color-mix(
+    in oklab,
+    var(--color-star-white) 12%,
+    var(--color-bg-deep)
+  );
+  --sidebar-accent-foreground: var(--color-star-white);
+  --sidebar-border: color-mix(
+    in oklab,
+    var(--color-star-white) 14%,
+    transparent
+  );
+  --sidebar-outline: var(--color-god);
+}
+
+/* ---------------------------------------------------------------------------
+   Parchment surface — inverts polarity for everything inside it. Because the
+   semantic tokens below are mapped with `@theme inline`, utilities like
+   `text-muted-foreground` resolve at the element, so any Starwind component
+   dropped in here reads ink values with no per-component work.
+   --------------------------------------------------------------------------- */
+.surface-parchment {
+  --background: var(--color-parchment);
+  --foreground: var(--color-ink);
+
+  --card: color-mix(in oklab, #000 3.5%, var(--color-parchment));
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-parchment);
+  --popover-foreground: var(--color-ink);
+
+  --secondary: color-mix(in oklab, var(--color-ink) 8%, var(--color-parchment));
+  --secondary-foreground: var(--color-ink);
+
+  --muted: color-mix(in oklab, #000 3.5%, var(--color-parchment));
+  --muted-foreground: var(--color-ink-soft);
+
+  --accent: color-mix(in oklab, var(--color-ink) 8%, var(--color-parchment));
+  --accent-foreground: var(--color-ink);
+
+  --border: color-mix(in oklab, var(--color-ink) 15%, transparent);
+  --input: color-mix(in oklab, var(--color-ink) 25%, transparent);
+
+  /* Drop these two lines if you'd rather compose with `bg-background text-foreground`. */
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* ---------------------------------------------------------------------------
+   Torn sheet. Pair with .surface-parchment — that one flips the tokens, this
+   one paints the paper.
+
+   Everything physical (colour, fibre, stains, scorched rim) lives on ::before,
+   one layer behind the content, because the edges are chewed by an SVG
+   displacement filter and a filter applies to an element's whole subtree — put
+   it on the sheet itself and every glyph inside would wobble too.
+
+   Displacement runs on rendered pixels, so a tear is ~7px whether the sheet is
+   600px or 3000px tall. A stretched mask image can't do that: `mask-size: 100%
+   100%` scales the teeth with the box, which is why they smeared before.
+   --------------------------------------------------------------------------- */
+.parchment-sheet {
+  position: relative;
+  /* Contain the -1 pseudo so it can't slip behind an ancestor's background. */
+  isolation: isolate;
+  /* The paper is ::before; the box itself must not paint one. Wins over
+     .surface-parchment above by source order — same specificity, later rule. */
+  background-color: transparent;
+}
+
+.parchment-sheet::before {
+  content: "";
+  position: absolute;
+  /* Bleed, so the tear bites into the margin rather than into the padding. */
+  inset: -0.5rem;
+  z-index: -1;
+  background-color: var(--color-parchment);
+  background-image: var(--parchment-fiber), var(--parchment-mottle);
+  background-blend-mode: soft-light, normal, normal, normal, normal, normal;
+  /* Four insets, tight to wide: a fibrous dark lip right at the tear, then
+     washes that fade out well before the middle — dark border, light body. */
+  box-shadow:
+    inset 0 0 1px rgba(84, 56, 22, 0.5),
+    inset 0 0 7px rgba(112, 78, 34, 0.45),
+    inset 0 0 24px rgba(126, 94, 46, 0.32),
+    inset 0 0 90px rgba(138, 106, 58, 0.18);
+  /* drop-shadow comes after the displacement, so the cast shadow follows the
+     torn silhouette instead of the original rectangle. */
+  filter: url(#parchment-tear) drop-shadow(0 14px 26px rgba(2, 4, 12, 0.55));
+}
+
+/* ---------------------------------------------------------------------------
+   Category accents. One contextual hue, rebound per category — put
+   `data-category={character.category}` on the card/page root and every
+   descendant picks it up. Defaults to god so tokens never resolve empty.
+   --------------------------------------------------------------------------- */
+:root,
+[data-category] {
+  --cat: var(--color-god);
+  --cat-ink: var(--color-god-ink);
+  --badge: var(--badge-god);
+  --cat-bg-alpha: 20%;
+  --cat-border-alpha: 60%;
+
+  --cat-bg: color-mix(in oklab, var(--cat) var(--cat-bg-alpha), transparent);
+  --cat-border: color-mix(
+    in oklab,
+    var(--cat) var(--cat-border-alpha),
+    transparent
+  );
+  --cat-fill-strong: color-mix(
+    in oklab,
+    var(--cat) 33%,
+    transparent
+  ); /* {accent}55 */
+  --cat-fill-soft: color-mix(
+    in oklab,
+    var(--cat) 9%,
+    transparent
+  ); /* {accent}18 */
+  --cat-glow: color-mix(in oklab, var(--cat) 35%, transparent);
+  --cat-glow-rest: color-mix(in oklab, var(--cat) 45%, transparent);
+  --cat-glow-pulse: color-mix(in oklab, var(--cat) 70%, transparent);
+
+  --gradient-portrait: linear-gradient(
+    160deg,
+    var(--cat-fill-strong),
+    var(--cat-fill-soft)
+  );
+  --gradient-cta: linear-gradient(135deg, var(--cat), var(--color-ink) 140%);
+}
+
+[data-category="god"] {
+  --cat: var(--color-god);
+  --cat-ink: var(--color-god-ink);
+  --badge: var(--badge-god);
+}
+
+[data-category="hero"] {
+  --cat: var(--color-hero);
+  --cat-ink: var(--color-hero-ink);
+  --badge: var(--badge-hero);
+  --cat-bg-alpha: 18%;
+  --cat-border-alpha: 55%;
+}
+
+[data-category="titan"] {
+  --cat: var(--color-titan);
+  --cat-ink: var(--color-titan-ink);
+  --badge: var(--badge-titan);
+  --cat-bg-alpha: 18%;
+  --cat-border-alpha: 55%;
+}
+
+[data-category="monster"] {
+  --cat: var(--color-monster);
+  --cat-ink: var(--color-monster-ink);
+  --badge: var(--badge-monster);
+}
+
+/* ---------------------------------------------------------------------------
+   Token → utility mapping. `inline` means utilities emit `var(--card)` rather
+   than a snapshot of its value, which is what makes the scopes above work.
+   --------------------------------------------------------------------------- */
+@theme inline {
+  /* Families come from Astro's Fonts API — see `fonts` in astro.config.mjs and
+     <Font /> in BaseLayout. Each variable already carries matched fallbacks. */
+  --font-sans: var(--font-nunito);
+  --font-display: var(--font-cinzel);
+  --font-heading: var(--font-display);
+  --font-accent: var(--font-kalam);
+
+  --color-cat: var(--cat);
+  --color-cat-ink: var(--cat-ink);
+  --color-cat-bg: var(--cat-bg);
+  --color-cat-border: var(--cat-border);
+  --color-cat-glow: var(--cat-glow);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-accent: var(--primary-accent);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-accent: var(--secondary-accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-outline: var(--outline);
+
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-outline: var(--sidebar-outline);
+
+  --radius-xs: calc(var(--radius) - 0.375rem);
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.25rem);
+  --radius-2xl: calc(var(--radius) + 0.5rem);
+  --radius-3xl: calc(var(--radius) + 1rem);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-outline/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-base leading-[1.65] text-foreground antialiased;
+    margin: 0;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+  p {
+    margin: 0;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-bold text-foreground;
+  }
+  h1 {
+    @apply text-[56px] font-bold tracking-[-0.03em] max-lg:text-4xl;
+  }
+  h2 {
+    @apply text-2xl tracking-tight max-lg:text-xl;
+  }
+  h3 {
+    @apply text-xl max-lg:text-lg;
+  }
+}
+
+body {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cross-document view transitions: a plain crossfade between pages in
+   browsers that support it, nothing in those that don't. No JS involved. */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+@layer components {
+  .text-eyebrow {
+    @apply font-accent text-sm tracking-[0.14em] uppercase;
+  }
+
+  .text-tagline,
+  .text-pronunciation,
+  .text-fact-label {
+    @apply font-accent;
+  }
+
+  .text-pronunciation {
+    @apply font-bold;
+  }
+
+  /* Meander bands. The SVG is a stencil, not an image — `mask-image` punches the
+     pattern out of `background-color: currentColor`, so the band takes whatever
+     text color is in scope (`text-cat`, `text-god`, `text-ink/40`, …). An <img>
+     or background-image could not be recolored: these live in public/ and are
+     fetched as separate documents, so `fill="currentColor"` inside them never
+     resolves against your page.
+
+     Each file is exactly one repeat unit, so `repeat-x` is seamless. Set the
+     height with any h-* utility; the width follows the tile's aspect ratio.
+     Decorative — mark them aria-hidden. */
+  .meander {
+    height: --spacing(5);
+    background-color: currentColor;
+    mask-image: var(--meander, var(--meander-square));
+    mask-repeat: repeat-x;
+    mask-size: auto 100%;
+    mask-position: center;
+  }
+
+  .meander-square {
+    --meander: var(--meander-square);
+  }
+  .meander-t {
+    --meander: var(--meander-t);
+  }
+  .meander-wave {
+    --meander: var(--meander-wave);
+  }
+
+  /* Mirror vertically — pair with .meander for a matching bottom edge. */
+  .meander-flip {
+    scale: 1 -1;
+  }
+
+  /* Dissolve both ends, so a divider doesn't collide with the page edge. */
+  .meander-fade {
+    mask-image:
+      var(--meander, var(--meander-square)),
+      linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+    mask-repeat: repeat-x, no-repeat;
+    mask-size:
+      auto 100%,
+      100% 100%;
+    mask-composite: intersect;
+  }
+
+  /* Category seal. Same masked-silhouette approach as .meander, so it tints
+     with any text colour — text-cat-ink on parchment, text-cat on the night
+     background. Size it with size-*; the art is square.
+
+     Which seal appears comes from --badge, set alongside --cat in the category
+     scopes above. That is deliberately a token and not a descendant selector:
+     custom properties apply to the element that declares them *and* inherit
+     down, so this works whether data-category sits on an ancestor (the
+     character sheet, a card) or on the badge itself (the filter buttons).
+
+     Any content inside gets masked along with the box, so keep it empty and
+     name it with aria-label. It is not decorative — the seal names the
+     category, and on the character page nothing else does. */
+  .badge {
+    background-color: currentColor;
+    mask-image: var(--badge);
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    mask-position: center;
+  }
+
+  /* Hero <h1>. Gradient text needs the clip trio, so it can't be a plain token. */
+  .text-gradient-title {
+    background-image: var(--gradient-title);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .list-star {
+    list-style-type: "\2726";
+  }
+
+  .list-star > li {
+    padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .list-star > li::marker {
+    color: var(--cat-ink);
+    font-size: 1.2em;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 24px 3px var(--cat-glow-rest);
+  }
+  50% {
+    box-shadow: 0 0 48px 12px var(--cat-glow-pulse);
+  }
+}

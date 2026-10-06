@@ -1,54 +1,62 @@
-// Portrait lookup, built from whatever `bun run portraits` has encoded into
-// src/assets/portraits/. Globbing (rather than hand-written paths in the data)
-// is what gets every file a content hash from Vite — so the host can serve
-// them with an immutable cache header — and it turns "does this figure have
-// art yet?" into a build-time fact instead of a runtime 404.
+// Portrait lookup by slug. The masters live in src/assets/portraits/ and are
+// imported through a glob, so Astro's image pipeline can resize and re-encode
+// them at build time (see components/Portrait.astro) and fingerprint every
+// output for permanent caching. Whether a figure has art yet is a build-time
+// fact: no file, no entry, and the card draws its placeholder frame.
+
+import path from "node:path"
+
+import type { ImageMetadata } from "astro"
+import sharp from "sharp"
 
 import type { CharacterSlug } from "@/data/types"
 
-const files = import.meta.glob<string>("../assets/portraits/*.{avif,webp}", {
-  eager: true,
-  query: "?url",
-  import: "default",
-})
+const PORTRAIT_DIR = path.join(process.cwd(), "src/assets/portraits")
 
-export interface PortraitSources {
-  /** `srcset` for the <source type="image/avif">. */
-  avif: string
-  /** `srcset` for the <img>, which browsers without AVIF fall back to. */
-  webp: string
-  /** Largest WebP, for the <img> `src`. */
-  src: string
+const files = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/portraits/*.{jpg,jpeg,png}",
+  { eager: true },
+)
+
+const portraits = new Map<string, ImageMetadata>()
+const placeholders = new WeakMap<ImageMetadata, string>()
+
+await Promise.all(
+  Object.entries(files).map(async ([file, module]) => {
+    const name = path.basename(file)
+    const slug = name.replace(/\.\w+$/, "")
+    portraits.set(slug, module.default)
+    placeholders.set(
+      module.default,
+      await gradientOf(path.join(PORTRAIT_DIR, name)),
+    )
+  }),
+)
+
+/**
+ * A three-stop vertical gradient of the portrait's own colours — sky, figure,
+ * ground — painted behind the <img> so a slow load shows a soft preview of the
+ * art rather than an empty box. Squashing the master to 1×3 pixels does the
+ * averaging; it costs ~70 bytes of HTML per portrait.
+ */
+async function gradientOf(file: string): Promise<string> {
+  const pixels = await sharp(file)
+    .resize(1, 3, { fit: "fill" })
+    .removeAlpha()
+    .raw()
+    .toBuffer()
+  const stops = [0, 3, 6].map(
+    (i) => `rgb(${pixels[i]} ${pixels[i + 1]} ${pixels[i + 2]})`,
+  )
+  return `linear-gradient(${stops.join(", ")})`
 }
 
-const FILE_NAME = /\/([a-z-]+)-(\d+)\.(avif|webp)$/
-
-type Variants = Record<"avif" | "webp", Array<[width: number, url: string]>>
-
-const variants = new Map<string, Variants>()
-for (const [file, url] of Object.entries(files)) {
-  const match = FILE_NAME.exec(file)
-  if (!match) continue
-  const [, slug, width, format] = match
-  let entry = variants.get(slug)
-  if (!entry) variants.set(slug, (entry = { avif: [], webp: [] }))
-  entry[format as keyof Variants].push([Number(width), url])
-}
-
-const srcset = (list: Variants["avif"]) =>
-  list
-    .toSorted(([a], [b]) => a - b)
-    .map(([width, url]) => `${url} ${width}w`)
-    .join(", ")
-
-const portraits = new Map<string, PortraitSources>()
-for (const [slug, { avif, webp }] of variants) {
-  const largest = webp.toSorted(([a], [b]) => b - a)[0]
-  if (!largest) continue
-  portraits.set(slug, { avif: srcset(avif), webp: srcset(webp), src: largest[1] })
-}
-
-/** The encoded portrait set for a figure, or undefined if none exists yet. */
-export function portraitOf(slug: CharacterSlug): PortraitSources | undefined {
+/** The portrait master for a figure, or undefined if none exists yet. */
+export function portraitOf(slug: CharacterSlug): ImageMetadata | undefined {
   return portraits.get(slug)
+}
+
+/** The colour placeholder for a portrait returned by portraitOf. */
+export function placeholderOf(image: ImageMetadata): string | undefined {
+  return placeholders.get(image)
 }

@@ -1,0 +1,45 @@
+---
+// Renders a Hugeicons icon as inline SVG. The package exports each icon as
+// plain data — [tag, attributes] pairs with React-style camelCase names — so
+// this converts the names and draws it with no runtime.
+import type { HTMLAttributes } from "astro/types"
+
+// Matches the package's own (unexported) IconSvgObject.
+type IconData = ReadonlyArray<
+  readonly [string, Readonly<Record<string, string | number>>]
+>
+
+interface Props extends HTMLAttributes<"svg"> {
+  icon: IconData
+  size?: number
+  strokeWidth?: number
+}
+
+const { icon, size = 24, strokeWidth, ...rest } = Astro.props
+
+const kebab = (name: string) =>
+  name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+
+const children = icon.map(([tag, { key, ...attrs }]) => {
+  const entries = Object.entries(attrs).map(([name, value]) =>
+    name === "strokeWidth" && strokeWidth !== undefined
+      ? ["stroke-width", String(strokeWidth)]
+      : [kebab(name), String(value)],
+  )
+  return { Tag: tag, attrs: Object.fromEntries(entries) }
+})
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill="none"
+  aria-hidden="true"
+  {...rest}
+>
+  {children.map(({ Tag, attrs }) => (
+    <Tag {...attrs} />
+  ))}
+</svg>

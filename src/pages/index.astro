@@ -1,0 +1,202 @@
+---
+import CardPerson from "@/components/CardPerson.astro"
+import { characterList } from "@/data/characters"
+import BaseLayout from "@/layouts/BaseLayout.astro"
+import {
+  CATEGORY_ORDER,
+  CATEGORY_PLURAL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+} from "@/lib/site"
+
+const characters = characterList.toSorted((a, b) =>
+  a.name.localeCompare(b.name),
+)
+
+const categories = CATEGORY_ORDER.filter((category) =>
+  characters.some((character) => character.category === category),
+)
+
+// The first grid row — up to four across at xl — is above the fold and holds
+// the LCP image, so it loads eagerly; the rest of the grid lazy-loads. This is
+// the unfiltered order: on a shared ?category= link these four still download
+// even if hidden, which costs little next to a lazy LCP on the default view.
+const PRIORITY_CARDS = 4
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  url: Astro.site?.href,
+}
+---
+
+<BaseLayout
+  title={`${SITE_NAME} · Gods, Titans, Heroes & Monsters of Greek Myth`}
+  description={SITE_DESCRIPTION}
+  jsonLd={jsonLd}
+>
+  {/* Applies a shared ?category= link before first paint, so the full grid
+      never flashes and then collapses. The CSS below does the hiding; the
+      script at the bottom keeps it in sync after that. Filtered views are the
+      same page, so the canonical link stays "/". */}
+  <script
+    is:inline
+    slot="head"
+    define:vars={{ categories }}
+  >
+    const category = new URLSearchParams(location.search).get("category")
+    if (categories.includes(category)) {
+      document.documentElement.dataset.filter = category
+    }
+  </script>
+  <main class="mx-auto w-full max-w-350 pt-10 pb-24">
+    <nav
+      aria-label="Filter by category"
+      class="mb-10 flex flex-wrap justify-center gap-4 lg:gap-12"
+      data-filter-nav
+    >
+      {categories.map((category) => (
+        <button
+          type="button"
+          data-filter-button
+          data-category={category}
+          aria-pressed="false"
+          aria-label={`Show only ${CATEGORY_PLURAL[category]}`}
+          data-plural={CATEGORY_PLURAL[category]}
+          class="badge size-24 md:size-28 xl:size-36 text-cat transition duration-200 ease-out hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cat"
+        />
+      ))}
+    </nav>
+    <p
+      class="sr-only"
+      aria-live="polite"
+      data-filter-status
+    ></p>
+
+    <div
+      aria-hidden="true"
+      class="meander meander-square meander-fade mx-auto mb-14 h-7 max-w-350 text-star-white/25"
+    ></div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 xl:gap-10 px-4">
+      {characters.map((character, index) => (
+        <a
+          href={`/characters/${character.slug}`}
+          class="block no-underline"
+          data-card
+          data-category={character.category}
+        >
+          <CardPerson
+            character={character}
+            priority={index < PRIORITY_CARDS}
+          />
+        </a>
+      ))}
+    </div>
+
+    <div
+      aria-hidden="true"
+      class="meander meander-square meander-fade mx-auto mt-14 h-7 max-w-350 text-star-white/25"
+    ></div>
+  </main>
+</BaseLayout>
+
+<style is:global>
+  /* The filter is one attribute on <html>: data-filter="hero" and so on. The
+     rules key off it rather than off the buttons' aria-pressed, because the
+     head script sets it before any of the page exists. A hidden card is
+     display:none, so its lazy portrait is never fetched. One rule per
+     category — CSS can't compare one attribute's value against another. */
+  html[data-filter="god"] [data-card]:not([data-category="god"]),
+  html[data-filter="hero"] [data-card]:not([data-category="hero"]),
+  html[data-filter="titan"] [data-card]:not([data-category="titan"]),
+  html[data-filter="monster"] [data-card]:not([data-category="monster"]) {
+    display: none;
+  }
+
+  /* With a filter on, the other seals dim; the chosen one stays lifted. */
+  html[data-filter] [data-filter-button] {
+    opacity: 0.35;
+  }
+  html[data-filter] [data-filter-button]:hover {
+    opacity: 0.75;
+  }
+  html[data-filter="god"] [data-filter-button][data-category="god"],
+  html[data-filter="hero"] [data-filter-button][data-category="hero"],
+  html[data-filter="titan"] [data-filter-button][data-category="titan"],
+  html[data-filter="monster"] [data-filter-button][data-category="monster"] {
+    opacity: 1;
+    scale: 1.05;
+  }
+</style>
+
+<script>
+  // Click a seal to show only that category; click it again to clear. The
+  // choice lives in ?category= so a filtered view can be shared, and back and
+  // forward step through filters without leaving the page.
+  const root = document.documentElement
+  const buttons = [
+    ...document.querySelectorAll<HTMLButtonElement>("[data-filter-button]"),
+  ]
+  const plural = new Map(
+    buttons.map((button) => [button.dataset.category, button.dataset.plural]),
+  )
+  const status = document.querySelector<HTMLElement>("[data-filter-status]")
+  const valid = new Set(buttons.map((button) => button.dataset.category))
+
+  function fromUrl(): string | null {
+    const category = new URLSearchParams(location.search).get("category")
+    return category && valid.has(category) ? category : null
+  }
+
+  function apply(category: string | null) {
+    if (category) root.dataset.filter = category
+    else delete root.dataset.filter
+
+    for (const button of buttons) {
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.category === category),
+      )
+    }
+
+    if (status) {
+      const shown = document.querySelectorAll(
+        category ? `[data-card][data-category="${category}"]` : "[data-card]",
+      ).length
+      status.textContent = category
+        ? `Showing ${shown} ${plural.get(category)}`
+        : `Showing all ${shown} figures`
+    }
+  }
+
+  document
+    .querySelector("[data-filter-nav]")
+    ?.addEventListener("click", (event) => {
+      const button = (event.target as Element).closest<HTMLButtonElement>(
+        "[data-filter-button]",
+      )
+      const category = button?.dataset.category
+      if (!category) return
+
+      const next = fromUrl() === category ? null : category
+      const url = new URL(location.href)
+      if (next) url.searchParams.set("category", next)
+      else url.searchParams.delete("category")
+      history.pushState(null, "", url)
+      apply(next)
+    })
+
+  addEventListener("popstate", () => apply(fromUrl()))
+
+  // Sync aria-pressed with whatever the head script applied. The status
+  // message is left empty on load so screen readers don't announce it.
+  for (const button of buttons) {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.category === fromUrl()),
+    )
+  }
+</script>

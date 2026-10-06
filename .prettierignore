@@ -1,0 +1,5 @@
+dist/
+.astro/
+working/
+bun.lock
+src/assets/

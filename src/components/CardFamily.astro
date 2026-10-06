@@ -1,0 +1,53 @@
+---
+import { HierarchyIcon } from "@hugeicons/core-free-icons"
+
+import CardStat from "@/components/CardStat.astro"
+import type { Character } from "@/data/types"
+import { hasFamily, type Family } from "@/lib/graph"
+
+interface Props {
+  category: Character["category"]
+  family: Family
+}
+
+const { category, family } = Astro.props
+
+const relations: Array<[label: string, members: Character[]]> = [
+  ["Parents", family.parents],
+  ["Consorts", family.consorts],
+  ["Siblings", family.siblings],
+  ["Children", family.children],
+]
+---
+
+{hasFamily(family) && (
+  <CardStat
+    category={category}
+    label="Family"
+    icon={HierarchyIcon}
+  >
+    {relations
+      .filter(([, members]) => members.length > 0)
+      .map(([label, members]) => (
+        <div class="text-ink grid grid-cols-3">
+          <div class="text-cat-ink col-span-1">{label}: </div>
+          {/* min-w-0 so a long list of linked names wraps inside the card.
+                Without it the track takes its max-content width and pushes
+                the whole page wide on a phone. */}
+          <div class="col-span-2 min-w-0">
+            {members.map((member, index) => (
+              <span>
+                {index > 0 && ", "}
+                <a
+                  href={`/characters/${member.slug}`}
+                  class="underline underline-offset-2"
+                >
+                  {member.name}
+                </a>
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+  </CardStat>
+)}

@@ -26,3 +26,6 @@ dist-ssr
 # related working files
 working
 public/videos
+
+# Astro
+.astro

@@ -1,0 +1,52 @@
+---
+// A character portrait as AVIF with a WebP fallback, at 400w and 600w. Astro
+// encodes these from the master at build time and caches the results, so a
+// new or changed master is the only thing that costs a re-encode.
+//
+// Quality is one number for every format. 45 is tuned for AVIF, which nearly
+// every browser takes (crops at 1:1 were indistinguishable from the master);
+// the WebP fallback comes out softer at the same setting, which is acceptable
+// for the few browsers that need it.
+import type { ImageMetadata, ImageOutputFormat } from "astro"
+import { Picture } from "astro:assets"
+
+import { placeholderOf } from "@/lib/portraits"
+
+interface Props {
+  src: ImageMetadata
+  alt: string
+  /** Rendered width at each breakpoint, so the browser picks 400w or 600w. */
+  sizes: string
+  /**
+   * Above the fold and likely the LCP element: load eagerly at high priority.
+   * Everything else lazy-loads as it nears the viewport.
+   */
+  priority?: boolean
+  class?: string
+}
+
+const { src, alt, sizes, priority = false, class: className } = Astro.props
+
+// The dev server encodes images on request and doesn't keep the results, and
+// AVIF is ~4× slower to encode than WebP (~0.22s vs ~0.05s a portrait). Dev
+// gets WebP only so the grid fills in quickly; the build still ships AVIF.
+const formats: ImageOutputFormat[] = import.meta.env.DEV
+  ? ["webp"]
+  : ["avif", "webp"]
+
+const placeholder = placeholderOf(src)
+---
+
+<Picture
+  src={src}
+  alt={alt}
+  formats={formats}
+  fallbackFormat="webp"
+  widths={[400, 600]}
+  sizes={sizes}
+  quality={45}
+  priority={priority}
+  class={className}
+  style={placeholder && `background-image: ${placeholder}`}
+  pictureAttributes={{ class: "contents" }}
+/>

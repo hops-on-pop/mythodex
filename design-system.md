@@ -8,15 +8,17 @@
 | Hand-lettered accent | `Kalam`             | 400, 700           | Eyebrow label, tagline, pronunciation guide, fact labels      |
 | Body                 | `Nunito` (variable) | 400, 600, 700, 800 | Paragraph copy, badges, buttons, quick-fact values            |
 
-Fonts are bundled with the site through Fontsource (Latin subset only), not
-loaded from Google Fonts. The imports are at the top of `src/index.css`.
+Fonts are self-hosted from the installed Fontsource packages (Latin subset
+only) through Astro's Fonts API. The `fonts` list in `astro.config.mjs` names
+each file, and the CSS variables (`--font-cinzel`, `--font-nunito`,
+`--font-kalam`) are mapped to `font-display`, `font-sans` and `font-accent` in
+`src/styles/global.css`.
 
-- Cinzel Decorative 900 isn't loaded. Add
-  `@fontsource/cinzel-decorative/latin-900.css` before using it, or the text
-  falls back to 700.
-- Nunito is the variable font, so any weight from 200 to 1000 works without
-  another import. In CSS the family is `"Nunito Variable"`, set as
-  `--font-sans`.
+- Cinzel Decorative 900 isn't loaded. Add a variant for
+  `cinzel-decorative-latin-900-normal` before using it, or the text falls back
+  to 700.
+- Nunito is the variable font, so any weight from 200 to 1000 works with no
+  extra file.
 
 Type scale in use:
 
