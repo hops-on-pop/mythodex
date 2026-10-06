@@ -5,10 +5,23 @@
     <link rel="icon" type="image/png" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <meta name="theme-color" content="#1e1b4b" />
-    <title>Mythodex</title>
+    <!-- Title and description are owned by each route's `head` (rendered by
+         <HeadContent /> in __root.tsx). They aren't repeated here: React adds
+         its own <title> and <meta> alongside rather than replacing them, so a
+         static copy would leave every page with two of each. -->
+
+    <!-- Link previews. Social crawlers don't run JS, so these stay static and
+         site-wide until pages are prerendered. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MythoDex" />
+    <meta property="og:title" content="MythoDex" />
+    <meta
+      property="og:description"
+      content="An illustrated field guide to Greek mythology: the gods, Titans, heroes and monsters, with their stories, symbols and family trees."
+    />
+    <meta name="twitter:card" content="summary" />
+
     <!-- Paints the night sky before index.css loads, so there's no white flash. -->
     <style>
       html {

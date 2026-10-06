@@ -133,7 +133,15 @@ export interface Character {
   domains: string[];
   symbols: string[];
   romanName?: string;
-  blurb: string; // grid card, 1–2 sentences
+  blurb: string; // grid card and meta description, 1–2 sentences
+  // No body/facts here: the long-form text lives in data/stories.ts so the home
+  // page doesn't download it. No portrait field either: art lives in
+  // art/portraits/{slug}.jpg and is looked up by slug — see lib/portraits.ts.
+  myths: MythSlug[];
+}
+
+/** The detail-page text for one figure. See data/stories.ts. */
+export interface Story {
   body: string[]; // detail page paragraphs
   /**
    * "Did You Know?" — 2–4 self-contained oddities, each one sentence or two.
@@ -142,8 +150,6 @@ export interface Character {
    * alone, so they can be shuffled or shown one at a time.
    */
   facts: string[];
-  portrait?: string; // absent → CSS placeholder frame
-  myths: MythSlug[];
 }
 
 export interface Myth {

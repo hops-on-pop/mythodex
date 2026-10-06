@@ -1,0 +1,14 @@
+# Cache rules for Netlify / Cloudflare Pages (both read this file).
+#
+# Everything under /assets/ — JS, CSS, fonts, portraits, the SVG stencils — is
+# emitted by Vite with a content hash in its name, so a changed file is a new
+# URL. Safe to cache for a year and never revalidate.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Not hashed, so cache briefly and refresh in the background.
+/favicon.ico
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# index.html, robots.txt and sitemap.xml keep the host's default (revalidate on
+# every request) so a deploy is picked up immediately.

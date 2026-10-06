@@ -1,38 +1,83 @@
 import { createFileRoute, notFound } from "@tanstack/react-router"
 
 import { CardFamily } from "@/components/card-family"
+import { Portrait } from "@/components/portrait"
 import { CardStat } from "@/components/ui/card-stat"
 import { Separator } from "@/components/ui/separator"
-import { characters } from "@/data/characters"
+import { characters, isCharacterSlug } from "@/data/characters"
+import { stories } from "@/data/stories"
 import type { CharacterSlug } from "@/data/types"
 import { familyOf } from "@/lib/graph"
+import { portraitOf } from "@/lib/portraits"
+import { SITE_NAME, absoluteUrl, canonical } from "@/lib/site"
 import { ShieldEnergyIcon, JupiterIcon } from "@hugeicons/core-free-icons"
 
 export const Route = createFileRoute("/characters/$slug")({
+  // Reject unknown slugs before anything renders, so the root's not-found page
+  // (and its noindex) handles them rather than a half-drawn sheet.
+  beforeLoad: ({ params }) => {
+    if (!isCharacterSlug(params.slug)) throw notFound()
+  },
+  // Only runs for a known slug: on a not-found, head stops at the root.
+  head: ({ params }) => {
+    const character = characters[params.slug as CharacterSlug]
+    const path = `/characters/${character.slug}`
+    const portrait = portraitOf(character.slug)
+    return {
+      meta: [
+        { title: `${character.name}, ${character.epithet} · ${SITE_NAME}` },
+        { name: "description", content: character.blurb },
+        {
+          "script:ld+json": {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: `${character.name}, ${character.epithet}`,
+            description: character.blurb,
+            url: absoluteUrl(path),
+            about: {
+              "@type": "Thing",
+              name: character.name,
+              alternateName: character.romanName,
+              description: character.blurb,
+              image: portrait && absoluteUrl(portrait.src),
+            },
+            breadcrumb: {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: SITE_NAME,
+                  item: absoluteUrl("/"),
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: character.name,
+                  item: absoluteUrl(path),
+                },
+              ],
+            },
+          },
+        },
+      ],
+      links: canonical(path),
+    }
+  },
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  // beforeLoad has already rejected anything that isn't a CharacterSlug.
   const { slug } = Route.useParams() as { slug: CharacterSlug }
-  const character = characters[slug]
-  if (!character) throw notFound()
-
-  const {
-    name,
-    epithet,
-    pronunciation,
-    category,
-    portrait,
-    domains,
-    symbols,
-    blurb,
-    body,
-    facts,
-  } = character
+  const { name, epithet, pronunciation, category, domains, symbols, blurb } =
+    characters[slug]
+  const { body, facts } = stories[slug]
 
   // Derived, never authored — the reverse index in lib/graph.ts is what turns
   // one-directional `parent-of` edges into parents and siblings.
   const family = familyOf(slug)
+  const portrait = portraitOf(slug)
 
   return (
     // The gutter lives on this wrapper rather than as a margin on the sheet.
@@ -70,7 +115,7 @@ function RouteComponent() {
             </h1>
 
             <p className="text-xl text-cat-ink font-bold pt-2">{epithet}</p>
-            <p className="text-lg font-italic text-cat-ink pt-2">
+            <p className="text-pronunciation text-lg text-cat-ink pt-2">
               {pronunciation}
             </p>
             <p className="text-ink text-lg pt-8 pr-6">{blurb}</p>
@@ -78,11 +123,15 @@ function RouteComponent() {
           <div className="flex flex-col min-w-0">
             {/* Fluid below its natural 300px — a fixed w-75 is wider than the
                 content box on a 375px screen. */}
-            <img
-              src={portrait}
-              alt={name}
-              className="w-full max-w-75 h-112.5 object-cover rounded-lg"
-            />
+            {portrait && (
+              <Portrait
+                sources={portrait}
+                sizes="300px"
+                priority
+                alt={name}
+                className="w-full max-w-75 h-112.5 object-cover rounded-lg"
+              />
+            )}
           </div>
           <div className="flex flex-col gap-8 min-w-0">
             <CardStat category={category} label="Domains" icon={JupiterIcon}>
@@ -113,12 +162,16 @@ function RouteComponent() {
         <div className="flex flex-col gap-4 pt-8">
           <h2 className="text-2xl font-bold text-cat-ink">The Story</h2>
           <Separator />
-          <p className="text-ink">{body.join("\n\n")}</p>
+          {body.map((paragraph) => (
+            <p key={paragraph} className="text-ink">
+              {paragraph}
+            </p>
+          ))}
         </div>
         <div className="flex flex-col gap-4 pt-10 pb-8">
           <h2 className="text-2xl font-bold text-cat-ink">Did You Know?</h2>
           <Separator />
-          <ul className="list-star list-outside pl-6 text-catink">
+          <ul className="list-star list-outside pl-6 text-cat-ink">
             {facts.map((fact) => (
               <li key={fact}>{fact}</li>
             ))}

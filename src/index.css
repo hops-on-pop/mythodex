@@ -1,4 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap");
+/* Self-hosted, latin only, and only the weights in use. Fetching from Google
+   meant a render-blocking @import to a second origin, then a third origin for
+   the files themselves; bundled, they're same-origin, hashed and cacheable
+   forever. Nunito is the variable cut — one file covers every weight. */
+@import "@fontsource/cinzel-decorative/latin-700.css";
+@import "@fontsource/kalam/latin-400.css";
+@import "@fontsource/kalam/latin-700.css";
+@import "@fontsource-variable/nunito/wght.css";
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -84,19 +91,19 @@
        square  76.921 x 100      t  109.104 x 100      wave  121.569 x 100
      The t tile is a mirrored pair — one key plus its reflection — so each repeat
      reads as a single wide T rather than a one-way running key. */
-  --meander-square: url("/images/meander-square.svg");
-  --meander-t: url("/images/meander-t.svg");
-  --meander-wave: url("/images/meander-wave.svg");
+  --meander-square: url("./assets/images/meander-square.svg");
+  --meander-t: url("./assets/images/meander-t.svg");
+  --meander-wave: url("./assets/images/meander-wave.svg");
 
   /* Category seals, same stencil trick as the meanders. Every glyph in these
      files is an outline — the arc lettering included — so they carry no font
      dependency and mask cleanly. Keep the artboards square and near-identical
      (1556.79, bar monster's 1548.29) or the seals drift out of optical step at
      a shared size. */
-  --badge-god: url("/images/god-badge.svg");
-  --badge-hero: url("/images/hero-badge.svg");
-  --badge-titan: url("/images/titan-badge.svg");
-  --badge-monster: url("/images/monster-badge.svg");
+  --badge-god: url("./assets/images/god-badge.svg");
+  --badge-hero: url("./assets/images/hero-badge.svg");
+  --badge-titan: url("./assets/images/titan-badge.svg");
+  --badge-monster: url("./assets/images/monster-badge.svg");
 
   /* 1.5px star dots at fixed coordinates. Each layer is one dot; add or move at will. */
   --gradient-star-field:
@@ -374,7 +381,7 @@
    than a snapshot of its value, which is what makes the scopes above work.
    --------------------------------------------------------------------------- */
 @theme inline {
-  --font-sans: "Nunito", sans-serif;
+  --font-sans: "Nunito Variable", sans-serif;
   --font-display: "Cinzel Decorative", serif;
   --font-heading: var(--font-display);
   --font-accent: "Kalam", cursive;

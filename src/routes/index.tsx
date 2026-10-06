@@ -2,6 +2,12 @@ import { createFileRoute } from "@tanstack/react-router"
 import { CardPerson } from "@/components/card-person"
 import { characters } from "@/data/characters"
 import type { Character } from "@/data/types"
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  absoluteUrl,
+  canonical,
+} from "@/lib/site"
 import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
 
@@ -18,13 +24,36 @@ function isCategory(value: unknown): value is Category {
 }
 
 export const Route = createFileRoute("/")({
-  // Typed search params rather than useState: a filtered grid is a shareable
-  // URL and back/forward walks the filter history. An unknown `?category=`
-  // drops out here, so the component never sees a value off the union.
   validateSearch: (search: Record<string, unknown>): IndexSearch =>
     isCategory(search.category) ? { category: search.category } : {},
+  head: () => ({
+    meta: [
+      { title: `${SITE_NAME} · Gods, Titans, Heroes & Monsters of Greek Myth` },
+      { name: "description", content: SITE_DESCRIPTION },
+      {
+        "script:ld+json": {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE_NAME,
+          description: SITE_DESCRIPTION,
+          url: absoluteUrl("/"),
+        },
+      },
+    ],
+    // Filtered views are the same page re-sorted; point them all at "/".
+    links: canonical("/"),
+  }),
+  // The landing page ships in the entry bundle instead of its own chunk. Split,
+  // the browser can't request it (or the character data it pulls in) until
+  // the entry has parsed and the router has matched — a whole extra round trip
+  // before first paint, for code every visit to "/" needs anyway.
+  codeSplitGroupings: [],
   component: RouteComponent,
 })
+
+// The first grid row — up to four across at xl — is above the fold and holds
+// the LCP image, so it loads eagerly; the rest of the grid lazy-loads.
+const PRIORITY_CARDS = 4
 
 const characterList: Character[] = Object.values(characters).sort((a, b) =>
   a.name.localeCompare(b.name),
@@ -46,7 +75,7 @@ function RouteComponent() {
       <main className="mx-auto w-full max-w-350 pt-10 pb-24">
         <nav
           aria-label="Filter by category"
-          className="mb-10 flex flex-wrap justify-center gap-4"
+          className="mb-10 flex flex-wrap justify-center gap-4 lg:gap-12"
         >
           {categories.map((category) => {
             const isActive = active === category
@@ -77,14 +106,17 @@ function RouteComponent() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 xl:gap-10 px-4">
-          {visible.map((character) => (
+          {visible.map((character, index) => (
             <Link
               key={character.slug}
               to="/characters/$slug"
               params={{ slug: character.slug }}
               className="block no-underline"
             >
-              <CardPerson character={character} />
+              <CardPerson
+                character={character}
+                priority={index < PRIORITY_CARDS}
+              />
             </Link>
           ))}
         </div>

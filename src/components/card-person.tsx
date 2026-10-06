@@ -1,20 +1,25 @@
-import { useState } from "react"
-
+import { Portrait } from "@/components/portrait"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import type { Character } from "@/data/types"
+import { portraitOf } from "@/lib/portraits"
+
+// The rendered card width at each grid breakpoint in routes/index.tsx — 1, 2,
+// 3, then 4 columns, less the gutters. Keep in step with that grid.
+const CARD_SIZES =
+  "(min-width: 1280px) 312px, (min-width: 768px) calc(33vw - 27px), (min-width: 640px) calc(50vw - 24px), calc(100vw - 32px)"
 
 interface CardPersonProps {
   character: Character
+  /** First row of the grid — see Portrait's `priority`. */
+  priority?: boolean
 }
 
-export function CardPerson({ character }: CardPersonProps) {
-  const { name, epithet, category, portrait } = character
+export function CardPerson({ character, priority = false }: CardPersonProps) {
+  const { slug, name, epithet, category } = character
 
-  // Every character carries a portrait path, but the art lands incrementally —
-  // so whether the file exists is a runtime fact, not a data one. A failed load
-  // drops to the placeholder frame rather than a broken-image icon.
-  const [portraitFailed, setPortraitFailed] = useState(false)
-  const showPortrait = Boolean(portrait) && !portraitFailed
+  // The art lands incrementally, so a figure with no encoded portrait yet gets
+  // the placeholder frame instead.
+  const portrait = portraitOf(slug)
 
   return (
     <Card
@@ -22,13 +27,12 @@ export function CardPerson({ character }: CardPersonProps) {
       className="flex flex-col pt-0 shadow-[0_0_24px_3px_var(--cat-glow-rest)] transition-transform duration-300 ease-out hover:z-5 hover:scale-110 hover:animate-glow-pulse"
     >
       <div className="relative overflow-hidden">
-        {showPortrait ? (
-          <img
-            src={portrait}
+        {portrait ? (
+          <Portrait
+            sources={portrait}
+            sizes={CARD_SIZES}
+            priority={priority}
             alt={`${name} ${epithet}`}
-            width={600}
-            height={900}
-            onError={() => setPortraitFailed(true)}
             className="block aspect-2/3 w-full object-cover"
           />
         ) : (

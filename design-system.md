@@ -4,15 +4,19 @@
 
 | Role                 | Font                | Weight(s)          | Usage                                                         |
 | -------------------- | ------------------- | ------------------ | ------------------------------------------------------------- |
-| Display / Headers    | `Cinzel Decorative` | 700, 900           | Site title, character names (card + detail), section headings |
+| Display / Headers    | `Cinzel Decorative` | 700                | Site title, character names (card + detail), section headings |
 | Hand-lettered accent | `Kalam`             | 400, 700           | Eyebrow label, tagline, pronunciation guide, fact labels      |
-| Body                 | `Nunito`            | 400, 600, 700, 800 | Paragraph copy, badges, buttons, quick-fact values            |
+| Body                 | `Nunito` (variable) | 400, 600, 700, 800 | Paragraph copy, badges, buttons, quick-fact values            |
 
-Google Fonts import:
+Fonts are bundled with the site through Fontsource (Latin subset only), not
+loaded from Google Fonts. The imports are at the top of `src/index.css`.
 
-```
-https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap
-```
+- Cinzel Decorative 900 isn't loaded. Add
+  `@fontsource/cinzel-decorative/latin-900.css` before using it, or the text
+  falls back to 700.
+- Nunito is the variable font, so any weight from 200 to 1000 works without
+  another import. In CSS the family is `"Nunito Variable"`, set as
+  `--font-sans`.
 
 Type scale in use:
 
